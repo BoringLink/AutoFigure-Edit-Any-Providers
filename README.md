@@ -1,300 +1,134 @@
 <div align="center">
 
-<img src="img/logo.png" alt="AutoFigure Logo" width="100%"/>
+<img src="img/logo.png" alt="AutoFigure-edit Logo" width="100%"/>
 
-
-# AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations [ICLR 2026]
-
-> [!NOTE]
-> This project is based on [AutoFigure](https://github.com/ResearAI/AutoFigure), designed to provide seamless integration with arbitrary model providers. It abstracts away provider-specific complexities, allowing you to easily switch between OpenRouter, Google AI, Bianxie, or any OpenAI-compatible API without modifying your application code.
-
----
+# AutoFigure-edit: Generating and Editing Publication-Ready Scientific Illustrations [ICLR 2026]
 
 [![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue?style=for-the-badge&logo=openreview)](https://openreview.net/forum?id=5N3z9JQJKq)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-FigureBench-orange?style=for-the-badge)](https://huggingface.co/datasets/WestlakeNLP/FigureBench)
-[![Website](https://img.shields.io/badge/Website-deepscientist.cc-brightgreen?style=for-the-badge&logo=googlechrome&logoColor=white)](https://deepscientist.cc/)
 
 <p align="center">
-  <strong>From Text to Publication-Ready Diagrams</strong><br>
-  AutoFigure is an intelligent system that leverages Large Language Models (LLMs) with iterative refinement to generate high-quality scientific figures from text descriptions or research papers.
+  <strong>From Method Text to Editable SVG</strong><br>
+  AutoFigure-edit is the next version of AutoFigure. It turns paper method sections into editable SVG figures and lets you refine them in an embedded SVG editor.
 </p>
 
-[Quick Start](#-quick-start) • [Web Interface](#-web-interface) • [Configuration](#%EF%B8%8F-configuration) • [API Reference](#-api-reference)
+[Quick Start](#-quick-start) • [Web Interface](#-web-interface) • [How It Works](#-how-it-works) • [Configuration](#-configuration) • [Citation](#-citation--license)
+
+[[`Paper`](https://openreview.net/forum?id=5N3z9JQJKq)]
+[[`Project`](https://github.com/ResearAI/AutoFigure)]
+[[`BibTeX`](#-citation--license)]
 
 </div>
 
----
-
-
-https://github.com/user-attachments/assets/d0c954a9-9cf3-4c8b-8b04-71d75a68854c
-
-
-## 🔥 News
-
-- **[2026.03.24]** 🧠 Our sister project **DeepScientist v1.5** is now officially released. It is a local-first open-source autonomous research system for end-to-end scientific discovery. Explore it on [GitHub](https://github.com/ResearAI/DeepScientist) or read the [ICLR 2026 paper](https://openreview.net/forum?id=cZFgsLq8Gs).
-- **[2026.03.11]** 📄 Our **AutoFigure-Edit** paper is now available on [arXiv](https://arxiv.org/pdf/2603.06674) and featured in 🤗[Hugging Face Daily Papers](https://huggingface.co/papers/2603.06674)! If you find our work helpful, please consider giving us an **upvote** on Hugging Face and **citing** our paper. Thank you! ❤️
-- **[2026.02.17]** 🚀 The **AutoFigure-Edit online platform** is now live! It is free for all scholars to use. Try it out at [deepscientist.cc](https://deepscientist.cc) or check out our open-source code on [GitHub](https://github.com/ResearAI/AutoFigure-Edit). This new Edit version achieves much better performance!
-- **[2026.01.26]** 🎉 AutoFigure has been accepted to **ICLR 2026**! You can read the paper on [arXiv](https://arxiv.org/abs/2602.03828).
 ---
 
 ## ✨ Features
 
 | Feature | Description |
 | :--- | :--- |
-| 📝 **Text-to-Figure** | Generate figures directly from natural language descriptions. |
-| 📄 **Paper-to-Figure** | Extract methodology from PDFs and create visual diagrams automatically. |
-| 🔄 **Iterative Refinement** | Dual-agent system (Generation + Evaluation) for continuous quality optimization. |
-| 🎨 **Multiple Formats** | Output as **SVG** or **mxGraph XML** (fully compatible with draw.io). |
-| 💅 **Image Enhancement** | Optional AI-powered post-processing for aesthetic beautification. |
-| 🖥️ **Web Interface** | Interactive Next.js frontend for easy generation and editing. |
+| 📝 **Text-to-Figure** | Generate a draft figure directly from method text. |
+| 🧠 **SAM3 Icon Detection** | Detect icon regions from multiple prompts and merge overlaps. |
+| 🎯 **Labeled Placeholders** | Insert consistent AF-style placeholders for reliable SVG mapping. |
+| 🧩 **SVG Generation** | Produce an editable SVG template aligned to the figure. |
+| 🖥️ **Embedded Editor** | Edit the SVG in-browser using the bundled svg-edit. |
+| 📦 **Artifact Outputs** | Save PNG/SVG outputs and icon crops per run. |
 
 ---
 
 ## 🚀 How It Works
 
-AutoFigure employs a **Review-Refine** loop to ensure high accuracy and aesthetic quality.
+AutoFigure-edit follows the exact pipeline implemented in `autofigure2.py`.
 
-<div align="center">
-<img src="img/method.png" alt="AutoFigure method" width="1000"/>
-</div>
+```mermaid
+flowchart LR
+    A[Method text] --> B[LLM image generation]
+    B --> C[figure.png]
+    C --> D[SAM3 segmentation\nmulti-prompt + merge]
+    D --> E[samed.png + boxlib.json]
+    E --> F[Crop + RMBG-2.0]
+    F --> G[icons/*.png + *_nobg.png]
+    C --> H[LLM SVG template generation\nuses figure + samed + boxlib]
+    E --> H
+    H --> I[template.svg]
+    I --> J[LLM SVG optimization\noptional]
+    J --> K[optimized_template.svg]
+    K --> L[Coordinate alignment]
+    G --> M[Icon replacement]
+    L --> M
+    M --> N[final.svg]
+```
 
-> **Process:**
-> 1. **Generate:** The agent creates initial SVG/XML based on description & references.
-> 2. **Evaluate:** The critic scores quality (0-10) and provides specific feedback.
-> 3. **Refine:** The loop continues until the figure meets publication standards.
-
----
-
-## 🌟 Generated Examples
-
-Here are examples of figures generated by AutoFigure across different domains, showcasing its versatility in handling various levels of complexity.
-
-| Category & Visualization |
-| :---: |
-| **📄 Paper Case**<br><img src="img/case_paper.png" width="100%" alt="Paper Case"/> |
-| **📊 Survey Case**<br><img src="img/case_survey.png" width="100%" alt="Survey Case"/> |
-| **📝 Blog Case**<br><img src="img/case_blog.png" width="100%" alt="Blog Case"/> |
-| **📘 Textbook Case**<br><img src="img/case_textbook.png" width="100%" alt="Textbook Case"/> |
+Key details:
+- Placeholder mode controls how icon boxes are encoded (`label`, `box`, or `none`).
+- `optimize_iterations=0` skips the optimization step and uses `template.svg` directly.
 
 ---
 
 ## ⚡ Quick Start
 
-### Option 1: Python SDK (Recommended)
-
-
-You can install via cloning the repo:
+### Option 1: CLI
 
 ```bash
-git clone https://github.com/ResearAI/AutoFigure.git
-cd AutoFigure
+# 1) Install dependencies
+pip install -r requirements.txt
+
+# 2) Install SAM3 separately (not vendored in this repo)
+git clone https://github.com/facebookresearch/sam3.git
+cd sam3
 pip install -e .
-playwright install chromium  # Required for rendering
 ```
 
-#### 1. Basic Usage (Text-to-Figure)
+**Run:**
 
-```python
-from autofigure import AutoFigureAgent, Config
-
-# 1. Configure
-config = Config(
-    generation_api_key="your-api-key",
-    generation_provider="openrouter",  # options: 'openrouter', 'gemini', 'bianxie'
-    generation_model="google/gemini-3.1-pro-preview",
-)
-
-# 2. Generate
-agent = AutoFigureAgent(config)
-result = agent.generate(
-    description="A flowchart showing transformer training pipeline",
-    max_iterations=5,
-    output_format="svg",
-    topic="paper" # 'paper', 'survey', 'blog', 'textbook'
-)
-
-print(f"✅ Generated: {result.svg_path} (Score: {result.final_score}/10)")
-```
-
-#### 2. Generate from Paper (PDF/Markdown)
-
-Extract methodology from a paper and generate a figure automatically.
-
-```python
-# Generate figure from paper (PDF or Markdown)
-result = agent.generate_from_paper(
-    paper_path="./paper.pdf",
-    max_iterations=5,
-    output_format="svg",
-    enable_enhancement=True, # Enhance the result
-)
-
-if result.success:
-    print(f"Extracted methodology: {result.methodology_text[:200]}...")
-    print(f"Generated figure: {result.svg_path}")
-```
-
-#### 3. With Image Enhancement
-
-Generate multiple enhanced aesthetic variants of the figure.
-
-```python
-result = agent.generate(
-    description="Neural network architecture diagram",
-    enable_enhancement=True,
-    enhancement_count=3,     # Generate 3 variants
-    art_style="Modern scientific illustration with clean lines",
-    enhancement_input_type="code2prompt" # Best quality mode
-)
-
-if result.success:
-    print(f"Original Preview: {result.preview_path}")
-    print(f"Enhanced variants: {result.enhanced_paths}")
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider bianxie \
+  --api_key YOUR_KEY
 ```
 
 ### Option 2: Web Interface
 
-Ideally suited for visual interaction and editing.
-
 ```bash
-./start.sh
-# Then open http://localhost:6002 in your browser
+python server.py
 ```
+
+Then open `http://localhost:8000`.
 
 ---
 
-## 📊 FigureBench Dataset
+## 🧩 SAM3 Installation Notes
 
-We introduce **FigureBench**, the first large-scale benchmark for generating scientific illustrations from long-form text.
+AutoFigure-edit depends on SAM3 but does **not** vendor it. Please follow the
+official SAM3 installation guide and prerequisites. The upstream repo currently
+targets Python 3.12+, PyTorch 2.7+, and CUDA 12.6 for GPU builds.
 
-<div align="center">
-<img src="img/figurebench.png" alt="figurebench" width="1000"/>
-</div>
+SAM3 checkpoints are hosted on Hugging Face and may require you to request
+access and authenticate (e.g., `huggingface-cli login`) before download.
 
-### Dataset Overview
-
-| Category | Samples | Avg. Tokens | Text Density | Complexity |
-|:---|:---:|:---:|:---:|:---:|
-| 📄 **Paper** | 3,200 | 12,732 | 42.1% | High |
-| 📝 **Blog** | 20 | 4,047 | 46.0% | Med |
-| 📊 **Survey** | 40 | 2,179 | 43.8% | High |
-| 📘 **Textbook** | 40 | 352 | 25.0% | Low |
-| **Total** | **3,300** | **10k+** | **41.2%** | **~5.3 Components** |
-
-### Download
-<div align="left">
-  <a href="https://huggingface.co/datasets/WestlakeNLP/FigureBench">
-    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Download%20on%20HuggingFace-FFD21E?style=for-the-badge&logoColor=black" alt="Download">
-  </a>
-</div>
-
-```python
-from datasets import load_dataset
-dataset = load_dataset("WestlakeNLP/FigureBench")
-```
-
----
+- SAM3 repo: https://github.com/facebookresearch/sam3
+- SAM3 Hugging Face: https://huggingface.co/facebook/sam3
 
 ## ⚙️ Configuration
 
-AutoFigure is highly configurable. You can set these in `Config()` or via environment variables.
-
 ### Supported LLM Providers
 
-| Provider | Base URL | Recommended Text / SVG Model | Recommended Image Model |
-|----------|----------|------------------------------|-------------------------|
-| **OpenRouter** | `openrouter.ai/api/v1` | `google/gemini-3.1-pro-preview` | `google/gemini-3.1-flash-image-preview` |
-| **Bianxie** | `api.bianxie.ai/v1` | `gemini-3.1-pro-preview` | `gemini-3.1-flash-image-preview` |
-| **Google** | `generativelanguage...` | `gemini-3.1-pro-preview` | `gemini-3.1-flash-image-preview` |
+| Provider | Base URL | Notes |
+|----------|----------|------|
+| **OpenRouter** | `openrouter.ai/api/v1` | Supports Gemini/Claude/others |
+| **Bianxie** | `api.bianxie.ai/v1` | OpenAI-compatible API |
 
-### Generation Settings
+Common CLI flags:
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `generation_api_key` | API key for figure generation | Required |
-| `generation_base_url` | Base URL for API | Provider default |
-| `generation_model` | Model name | Provider default |
-| `generation_provider` | Provider: 'openrouter', 'bianxie', 'gemini' | 'openrouter' |
-
-### Methodology Extraction Settings
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `methodology_api_key` | API key for methodology extraction | Same as generation |
-| `methodology_model` | Model for methodology extraction | Same as generation |
-| `methodology_provider` | Provider for methodology extraction | Same as generation |
-
-### Enhancement Settings
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `enhancement_api_key` | API key for image enhancement | None |
-| `enhancement_provider` | Enhancement provider | 'openrouter' |
-| `enhancement_model` | Model for image enhancement | Provider default |
-| `enhancement_input_type` | Input type: 'none', 'code', 'code2prompt' | 'code2prompt' |
-| `enhancement_count` | Number of enhanced variants to generate | 1 |
-| `art_style` | Art style description for enhancement | '' |
-
-### Pipeline Settings
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `max_iterations` | Maximum refinement iterations | 5 |
-| `quality_threshold` | Quality threshold (0-10) | 9.0 |
-| `output_dir` | Output directory | './autofigure_output' |
-| `custom_references` | Custom reference figure paths | None |
-
----
-
-## 📚 API Reference
-
-### `generate()` Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `description` | Text description of the figure to generate |
-| `max_iterations` | Maximum iterations (overrides config) |
-| `output_format` | 'svg' or 'mxgraphxml' |
-| `quality_threshold` | Quality threshold (overrides config) |
-| `enable_enhancement` | Whether to enhance the final image |
-| `art_style` | Art style for enhancement (overrides config) |
-| `enhancement_input_type` | 'none', 'code', or 'code2prompt' (overrides config) |
-| `enhancement_count` | Number of enhanced variants (overrides config) |
-| `topic` | Content type: 'paper', 'survey', 'blog', 'textbook' |
-| `custom_references` | Custom reference figure paths |
-
-### `generate_from_paper()` Parameters
-
-Accepts all parameters from `generate()` plus:
-
-| Parameter | Description |
-|-----------|-------------|
-| `paper_path` | Path to paper file (PDF or Markdown) |
-| `methodology_api_key` | API key for extraction (overrides config) |
-| `methodology_provider` | Provider for extraction (overrides config) |
-
-### Result Object (`GenerationResult`)
-
-| Attribute | Description |
-|-----------|-------------|
-| `success` | Whether generation was successful |
-| `svg_path` | Path to generated SVG file |
-| `mxgraph_path` | Path to generated mxGraph XML file |
-| `preview_path` | Path to PNG preview image |
-| `enhanced_paths` | List of all enhanced image paths |
-| `final_score` | Final quality score (0-10) |
-| `methodology_text` | Extracted methodology (from paper) |
-| `error` | Error message if failed |
-
-### Enhancement Modes
-
-| Mode | Description |
-|------|-------------|
-| `none` | Direct beautification without code reference |
-| `code` | Use generated code (SVG/XML) as reference |
-| `code2prompt` | Use LLM to analyze code and generate detailed prompt (recommended) |
+- `--provider` (openrouter | bianxie)
+- `--image_model`, `--svg_model`
+- `--sam_prompt` (comma-separated prompts)
+- `--merge_threshold` (0 disables merging)
+- `--optimize_iterations` (0 disables optimization)
+- `--reference_image_path` (optional)
 
 ---
 
@@ -304,16 +138,17 @@ Accepts all parameters from `generate()` plus:
 <summary>Click to expand directory tree</summary>
 
 ```
-AutoFigure/
-├── autofigure/              # 📦 Python SDK
-│   ├── agent.py             # Main Agent
-│   ├── generator.py         # Generation Pipeline
-│   ├── enhancer.py          # Image Enhancement
-│   └── extractor.py         # PDF Method Extraction
-├── frontend/                # 🖥️ Next.js Web UI
-├── backend/                 # 🔌 Flask API Server
-├── scripts/                 # 🛠️ Utility Scripts
-└── pyproject.toml           # Config
+AutoFigure-edit/
+├── autofigure2.py         # Main pipeline
+├── server.py              # FastAPI backend
+├── requirements.txt
+├── web/                   # Static frontend
+│   ├── index.html
+│   ├── canvas.html
+│   ├── styles.css
+│   ├── app.js
+│   └── vendor/svg-edit/   # Embedded SVG editor
+└── img/                   # README assets
 ```
 </details>
 
@@ -322,63 +157,23 @@ AutoFigure/
 ## 🤝 Community & Support
 
 **WeChat Discussion Group**  
-Scan the QR code to join our community. If the code is expired, please add WeChat ID `nauhcutnil` or contact `tuchuan@mail.hfut.edu.cn`.
-<table>
-  <tr>
-    <td><img src="img/wechat8.jpg" width="200" alt="WeChat 2"/></td>
-  </tr>
-</table>
+Scan the QR code to join our community. If the code is expired, please contact `tuchuan@mail.hfut.edu.cn`.
+
+<img src="img/wechat.jpg" width="200" alt="WeChat QR Code"/>
+
 ---
 
 ## 📜 Citation & License
 
-If you use **AutoFigure**, **AutoFigure-Edit**, or **FigureBench** in your research, please cite:
+If you use AutoFigure-edit in academic work, please cite this repository and the original AutoFigure project.
 
 ```bibtex
-@inproceedings{
-zhu2026autofigure,
-title={AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations},
-author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Sifan Liu and Qiyao Sun and Yue Zhang},
-booktitle={The Fourteenth International Conference on Learning Representations},
-year={2026},
-url={https://openreview.net/forum?id=5N3z9JQJKq}
-}
-
-@misc{lin2026autofigureeditgeneratingeditablescientific,
-      title={AutoFigure-Edit: Generating Editable Scientific Illustration}, 
-      author={Zhen Lin and Qiujie Xie and Minjun Zhu and Shichen Li and Qiyao Sun and Enhao Gu and Yiran Ding and Ke Sun and Fang Guo and Panzhong Lu and Zhiyuan Ning and Yixuan Weng and Yue Zhang},
-      year={2026},
-      eprint={2603.06674},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2603.06674}, 
+@software{autofigure_edit2026,
+  title = {AutoFigure-edit: Generating and Editing Publication-Ready Scientific Illustrations},
+  author = {AutoFigure-edit contributors},
+  year = {2026},
+  url = {https://github.com/your-org/AutoFigure-edit}
 }
 ```
 
-Repository metadata and usage guidance:
-
-- [CITATION.cff](./CITATION.cff)
-- [Citation and attribution guidance](./CITATION_AND_ATTRIBUTION.md)
-- [Name and logo usage](./TRADEMARK.md)
-
 This project is licensed under the MIT License - see `LICENSE` for details.
-Name and logo usage are covered separately in `TRADEMARK.md`.
-
----
-
-## More From ResearAI
-
-Explore more open-source research tools from ResearAI:
-
-| Project | What it does |
-|---|---|
-| [DeepScientist](https://github.com/ResearAI/DeepScientist) | autonomous scientific discovery system |
-| [AutoFigure-Edit](https://github.com/ResearAI/AutoFigure-Edit) | editable vector paper figures |
-| [DeepReviewer-v2](https://github.com/ResearAI/DeepReviewer-v2) | review papers and drafts |
-| [Awesome-AI-Scientist](https://github.com/ResearAI/Awesome-AI-Scientist) | curated AI scientist landscape |
-
----
-
-The optimal configuration for this project uses `gemini-3.1-flash-image-preview` from Google AI Studio [[https://aistudio.google.com/](https://aistudio.google.com/)] as the image generation model and `gemini-3.1-pro-preview` as the Text model. Each run costs approximately $0.50, consumes about 30,000 tokens, and takes around 20 minutes.
-
-[Mainland China Notice] Gemini's Terms of Service do not permit access or usage by users in mainland China. If OpenRouter throws an error, it is often because an account registered in mainland China lacks the necessary permissions to use Gemini. It is recommended to use an OpenRouter account registered in the United States or Europe and to ensure compliant usage.
