@@ -1,297 +1,221 @@
 <div align="center">
 
-<img src="img/logo.png" alt="AutoFigure 标志" width="100%"/>
+<img src="img/logo.png" alt="AutoFigure-edit Logo" width="100%"/>
 
-# AutoFigure：生成并优化可直接发表的科学插图 [ICLR 2026]
-
-> [!注]
-> 本项目基于 [AutoFigure](https://github.com/ResearAI/AutoFigure)，旨在与任意模型提供商实现无缝集成。它抽象化了提供商特有的复杂性，使您无需修改应用程序代码，即可轻松在 OpenRouter、Google AI、Bianxie 或任何兼容 OpenAI 的 API 之间切换。
-
----
-
-[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue?style=for-the-badge&logo=openreview)](https://openreview.net/forum?id=5N3z9JQJKq)
-[![许可证：MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-FigureBench-orange?style=for-the-badge)](https://huggingface.co/datasets/WestlakeNLP/FigureBench)
-[![网站](https://img.shields.io/badge/Website-deepscientist.cc-brightgreen?style=for-the-badge&logo=googlechrome&logoColor=white)](https://deepscientist.cc/)
-
+# AutoFigure-edit: Generating and Editing Publication-Ready Scientific Illustrations [ICLR 2026]
 <p align="center">
-  <strong>从文本到可发表的图表</strong><br>
-  AutoFigure 是一个智能系统，它利用大型语言模型（LLMs）并结合迭代优化，能够根据文本描述或研究论文生成高质量的科学图表。
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
 </p>
 
-[快速入门](#-quick-start) • [Web 界面](#-web-interface) • [配置](#%EF%B8%8F-configuration) • [API 参考](#-api-reference)
+[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue?style=for-the-badge&logo=openreview)](https://openreview.net/forum?id=5N3z9JQJKq)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-FigureBench-orange?style=for-the-badge)](https://huggingface.co/datasets/WestlakeNLP/FigureBench)
+
+<p align="center">
+  <strong>从方法文本到可编辑的 SVG</strong><br>
+  AutoFigure-edit 是 AutoFigure 的新一代版本。它能将论文的方法部分自动转化为完全可编辑的 SVG 插图，并支持在嵌入式 SVG 编辑器中进行微调。
+</p>
+
+[快速开始](#-快速开始) • [Web 界面演示](#%EF%B8%8F-web-界面演示) • [工作原理](#-工作原理) • [配置](#%EF%B8%8F-配置) • [引用](#-引用与许可)
+
+[[`论文`](https://openreview.net/forum?id=5N3z9JQJKq)]
+[[`项目主页`](https://github.com/ResearAI/AutoFigure)]
+[[`BibTeX`](#-引用与许可)]
 
 </div>
 
 ---
 
-https://github.com/user-attachments/assets/d0c954a9-9cf3-4c8b-8b04-71d75a68854c
+## ✨ 特性
 
-## 🔥 最新动态
-
-- **[2026.03.24]** 🧠 我们的姊妹项目 **DeepScientist v1.5** 现已正式发布。这是一个以本地优先为理念的开源自主研究系统，旨在实现端到端的科学发现。欢迎前往 [GitHub](https://github.com/ResearAI/DeepScientist) 探索，或阅读 [ICLR 2026 论文](https://openreview.net/forum?id=cZFgsLq8Gs)。
-- **[2026.03.11]** 📄 我们的 **AutoFigure-Edit** 论文现已发布在 [arXiv](https://arxiv.org/pdf/2603.06674)，并入选了 🤗[Hugging Face Daily Papers](https://huggingface.co/papers/2603.06674)！如果您觉得我们的工作有帮助，请考虑在 Hugging Face 上为我们**点赞**，并**引用**我们的论文。谢谢！❤️
-- **[2026.02.17]** 🚀 **AutoFigure-Edit 在线平台**现已上线！所有学者均可免费使用。欢迎访问 [deepscientist.cc](https://deepscientist.cc) 体验，或查看我们在 [GitHub](https://github.com/ResearAI/AutoFigure-Edit) 上的开源代码。这个全新的 Edit 版本性能大幅提升！
-- **[2026.01.26]** 🎉 AutoFigure 已被 **ICLR 2026** 录用！您可在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
-
----
-
-## ✨ 功能
-
-| 功能            | 描述                                                       |
-| :-------------- | :--------------------------------------------------------- |
-| 📝 **文本转图** | 直接根据自然语言描述生成图表。                             |
-| 📄 **论文转图** | 从 PDF 中提取方法论并自动生成可视化图表。                  |
-| 🔄 **迭代优化** | 采用双代理系统（生成 + 评估）实现持续的质量优化。          |
-| 🎨 **多种格式** | 输出为 **SVG** 或 **mxGraph XML**（与 draw.io 完全兼容）。 |
-| 💅 **图像增强** | 可选的 AI 驱动后处理，实现美化效果。                       |
-| 🖥️ **网页界面** | 交互式 Next.js 前端，便于生成和编辑。                      |
+| 特性 | 描述 |
+| :--- | :--- |
+| 📝 **文本转插图** | 直接从方法文本生成插图草稿。 |
+| 🧠 **SAM3 图标检测** | 通过多提示词检测图标区域并合并重叠部分。 |
+| 🎯 **带标签占位符** | 插入一致的 AF 风格占位符，实现可靠的 SVG 映射。 |
+| 🧩 **SVG 生成** | 生成与插图对齐的可编辑 SVG 模板。 |
+| 🖥️ **嵌入式编辑器** | 使用内置的 svg-edit 在浏览器中直接编辑 SVG。 |
+| 📦 **产物输出** | 每次运行保存 PNG/SVG 输出及裁剪后的图标。 |
 
 ---
 
+## 🎨 画廊：可编辑矢量化与风格迁移
+
+AutoFigure-edit 引入了两项突破性功能：
+
+1.  **完全可编辑的 SVG（纯代码实现）：** 与位图不同，我们的输出是结构化的矢量图形（SVG）。每个组件都是可编辑的——文本、形状和布局都可以无损修改。
+2.  **风格迁移：** 系统可以模仿用户提供的参考图片的艺术风格。
+
+以下是涵盖 3 篇不同论文的 **9 个示例**。每篇论文都使用 3 种不同的参考风格生成。
+*(每张图片展示：**左侧** = AutoFigure 生成的原图 | **右侧** = 矢量化后的可编辑 SVG)*
+
+| 论文案例与风格迁移展示 |
+| :---: |
+| **[CycleResearcher](https://github.com/zhu-minjun/Researcher) / [Style 1](https://arxiv.org/pdf/2510.09558)**<br><img src="img/case/4.png" width="100%" alt="Paper 1 Style 1"/> |
+| **[CycleResearcher](https://github.com/zhu-minjun/Researcher) / [Style 2](https://arxiv.org/pdf/2503.18102)**<br><img src="img/case/5.png" width="100%" alt="Paper 1 Style 2"/> |
+| **[CycleResearcher](https://github.com/zhu-minjun/Researcher) / [Style 3](https://arxiv.org/pdf/2510.14512)**<br><img src="img/case/6.png" width="100%" alt="Paper 1 Style 3"/> |
+| **[DeepReviewer](https://github.com/zhu-minjun/Researcher) / [Style 1](https://arxiv.org/pdf/2510.09558)**<br><img src="img/case/7.png" width="100%" alt="Paper 2 Style 1"/> |
+| **[DeepReviewer](https://github.com/zhu-minjun/Researcher) / [Style 2](https://arxiv.org/pdf/2503.18102)**<br><img src="img/case/8.png" width="100%" alt="Paper 2 Style 2"/> |
+| **[DeepReviewer](https://github.com/zhu-minjun/Researcher) / [Style 3](https://arxiv.org/pdf/2510.14512)**<br><img src="img/case/9.png" width="100%" alt="Paper 2 Style 3"/> |
+| **[DeepScientist](https://github.com/ResearAI/DeepScientist) / [Style 1](https://arxiv.org/pdf/2510.09558)**<br><img src="img/case/10.png" width="100%" alt="Paper 3 Style 1"/> |
+| **[DeepScientist](https://github.com/ResearAI/DeepScientist) / [Style 2](https://arxiv.org/pdf/2503.18102)**<br><img src="img/case/11.png" width="100%" alt="Paper 3 Style 2"/> |
+| **[DeepScientist](https://github.com/ResearAI/DeepScientist) / [Style 3](https://arxiv.org/pdf/2510.14512)**<br><img src="img/case/12.png" width="100%" alt="Paper 3 Style 3"/> |
+
+---
 ## 🚀 工作原理
 
-AutoFigure 采用 **审查-精炼** 循环机制，以确保高精度与美学品质。
-
-<img src="img/method.png" alt="AutoFigure 方法" width="1000"/>
-</div>
-
-> **流程：**
->
-> 1. **生成：** 智能体根据描述和参考资料创建初始 SVG/XML。
-> 2. **评估：** 评审员对质量进行评分（0-10 分）并提供具体反馈。
-> 3. **优化：** 循环持续进行，直至图表达到出版标准。
-
----
-
-## 🌟 生成示例
-
-以下是 AutoFigure 在不同领域生成的图表示例，展示了其在处理不同复杂度场景时的多功能性。
-
-|                                     类别与可视化                                      |
-| :-----------------------------------------------------------------------------------: |
-|    **📄 论文案例**<br><img src="img/case_paper.png" width="100%" alt="论文案例"/>     |
-|    **📊 调查案例**<br><img src="img/case_survey.png" width="100%" alt="调查案例"/>    |
-|     **📝 博客案例**<br><img src="img/case_blog.png" width="100%" alt="博客案例"/>     |
-| **📘 教科书案例**<br><img src="img/case_textbook.png" width="100%" alt="教科书案例"/> |
-
----
-
-## ⚡ 快速入门
-
-### 方案 1：Python SDK（推荐）
-
-您可以通过克隆仓库进行安装：
-
-```bash
-git clone https://github.com/ResearAI/AutoFigure.git
-cd AutoFigure
-pip install -e .
-playwright install chromium  # 渲染所需
-```
-
-#### 1. 基本用法（文本转图像）
-
-```python
-from autofigure import AutoFigureAgent, Config
-
-# 1. 配置
-config = Config(
-    generation_api_key="your-api-key",
-    generation_provider="openrouter",  # 选项：‘openrouter’、'gemini'、‘bianxie’
-    generation_model="google/gemini-3.1-pro-preview",
-)
-
-# 2. 生成
-agent = AutoFigureAgent(config)
-result = agent.generate(
-    description="展示 Transformer 训练流程的流程图",
-    max_iterations=5,
-    output_format="svg",
-    topic="paper" # ‘paper’, ‘survey’, ‘blog’, ‘textbook’
-)
-
-print(f“✅ 已生成：{result.svg_path} (得分：{result.final_score}/10)”)
-```
-
-#### 2. 基于论文生成（PDF/Markdown）
-
-从论文中提取方法论并自动生成图表。
-
-```python
-# 根据论文（PDF 或 Markdown）生成图表
-result = agent.generate_from_paper(
-    paper_path="./paper.pdf",
-    max_iterations=5,
-    output_format="svg",
-    enable_enhancement=True, # 增强结果
-)
-
-if result.success:
-    print(f“提取的方法学内容：{result.methodology_text[:200]}...”)
-    print(f“生成的图表：{result.svg_path}”)
-```
-
-#### 3. 带图像增强
-
-生成该图表的多个经过美化增强的变体。
-
-```python
-result = agent.generate(
-    description="神经网络架构图",
-    enable_enhancement=True,
-    enhancement_count=3,     # 生成 3 个变体
-    art_style="线条简洁的现代科学插画",
-    enhancement_input_type="code2prompt" # 最佳质量模式
-)
-
-if result.success:
-    print(f“原始预览：{result.preview_path}”)
-    print(f“增强变体：{result.enhanced_paths}”)
-```
-
-### 方案 2：Web 界面
-
-非常适合可视化交互和编辑。
-
-```bash
-./start.sh
-# 然后在浏览器中打开 http://localhost:6002
-```
-
----
-
-## 📊 FigureBench 数据集
-
-我们推出 **FigureBench**，这是首个用于从长文本生成科学插图的大规模基准测试。
+AutoFigure-edit 的处理流程通过四个阶段将原始生成的位图转化为可编辑的 SVG：
 
 <div align="center">
-<img src="img/figurebench.png" alt="figurebench" width="1000"/>
+  <img src="img/pipeline.png" width="100%" alt="流程可视化: Figure -> SAM -> Template -> Final"/>
+  <br>
+  <em>(1) 原始生成 &rarr; (2) SAM3 分割 &rarr; (3) SVG 布局模板 &rarr; (4) 最终矢量合成</em>
 </div>
 
-### 数据集概述
+<br>
 
-| 类别          |  样本数   | 平均词数 | 文本密度  |     复杂度      |
-| :------------ | :-------: | :------: | :-------: | :-------------: |
-| 📄 **论文**   |   3,200   |  12,732  |   42.1%   |       高        |
-| 📝 **博客**   |    20     |  4,047   |   46.0%   |       中        |
-| 📊 **综述**   |    40     |  2,179   |   43.8%   |       高        |
-| 📘 **教科书** |    40     |   352    |   25.0%   |       低        |
-| **总计**      | **3,300** | **10k+** | **41.2%** | **~5.3 个组件** |
+1.  **生成 (`figure.png`):** LLM 根据方法文本生成初始的光栅化草图。
+2.  **分割 (`sam.png`):** 集成 SAM3 检测并分割出独立的图标与文本区域。
+3.  **模板 (`template.svg`):** 系统构建包含占位符的 SVG 结构骨架（线框图）。
+4.  **合成 (`final.svg`):** 将高质量的抠图图标和矢量化文本注入模板，完成组装。
 
-### 下载
+<details>
+<summary><strong>点击查看技术流程详解</strong></summary>
 
-  <a href="https://huggingface.co/datasets/WestlakeNLP/FigureBench">
-    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Download%20on%20HuggingFace-FFD21E?style=for-the-badge&logoColor=black" alt="下载">
-  </a>
+<br>
+<div align="center">
+  <img src="img/edit_method.png" width="100%" alt="AutoFigure-edit 技术流程"/>
 </div>
 
-```python
-from datasets import load_dataset
-dataset = load_dataset(“WestlakeNLP/FigureBench”)
+AutoFigure2 的流程始于论文的方法文本，首先调用 **文本生成图像 LLM (Text-to-Image LLM)** 渲染出期刊风格的示意图，保存为 `figure.png`。接着，系统使用一个或多个文本提示词（如 "icon, diagram, arrow"）对该图像运行 **SAM3 分割**，通过 IoU 阈值合并重叠的检测结果，并在原图上绘制灰底黑边的带标签框；这一步生成了 `samed.png`（带标签的掩码层）和一个包含坐标、置信度和提示词来源的结构化文件 `boxlib.json`。
+
+随后，每个方框区域从原图中裁剪出来，并经过 **RMBG-2.0** 进行背景去除，生成位于 `icons/*.png` 和 `*_nobg.png` 的透明图标素材。系统将 `figure.png`、`samed.png` 和 `boxlib.json` 作为多模态输入，由 LLM 生成一个**占位符风格的 SVG** (`template.svg`)，其方框与标记区域相匹配。
+
+此外，SVG 可以选择性地通过 **LLM 优化器** 进行迭代微调，以更好地对齐线条、布局和风格，生成 `optimized_template.svg`（若跳过优化则使用原始模板）。系统随后比较 SVG 与原始图像的尺寸以计算缩放因子并对齐坐标系。最后，它将 SVG 中的每个占位符替换为对应的透明图标（通过标签/ID 匹配），从而组装出最终的 `final.svg`。
+
+**关键配置细节：**
+- **占位符模式 (Placeholder Mode):** 控制图标框在提示词中的编码方式（`label`、`box` 或 `none`）。
+- **优化 (Optimization):** 设置 `optimize_iterations=0` 可跳过微调步骤，直接使用生成的结构模板。
+</details>
+
+## ⚡ 快速开始
+
+### 选项 1: 命令行 (CLI)
+
+```bash
+# 1) 安装依赖
+pip install -r requirements.txt
+
+# 2) 单独安装 SAM3 (本项目未包含)
+git clone https://github.com/facebookresearch/sam3.git
+cd sam3
+pip install -e .
 ```
 
+**运行:**
+
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider bianxie \
+  --api_key YOUR_KEY
+```
+
+### 选项 2: Web 界面
+
+```bash
+python server.py
+```
+
+然后在浏览器打开 `http://localhost:8000`。
+
 ---
+
+## 🖥️ Web 界面演示
+
+AutoFigure-edit 提供了一个可视化的 Web 界面，旨在实现无缝的生成和编辑体验。
+
+### 1. 配置页面
+<img src="img/demo_start.png" width="100%" alt="配置页面" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
+
+在起始页面左侧粘贴论文的方法文本。在右侧配置生成选项：
+*   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter 或 Bianxie）。
+*   **优化 (Optimize):** 设置 SVG 模板的优化迭代次数（日常使用建议设为 `0`）。
+*   **参考图片 (Reference Image):** 上传目标图片以启用风格迁移功能。
+*   **SAM3 后端:** 选择本地 SAM3 或 fal.ai API（API Key 可选）。
+
+### 2. 画布与编辑器
+<img src="img/demo_canvas.png" width="100%" alt="画布页面" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
+
+生成结果会直接加载到集成的 [SVG-Edit](https://github.com/SVG-Edit/svgedit) 画布中，支持全功能的矢量编辑。
+*   **状态与日志:** 左上角查看实时进度，右上角按钮查看详细执行日志。
+*   **素材抽屉 (Artifacts):** 点击右下角的悬浮按钮展开 **素材面板**。这里包含所有中间产物（图标、SVG 模板等）。你可以直接将任何素材 **拖拽** 到画布上进行自定义创作。
+
+---
+
+## 🧩 SAM3 安装说明
+
+AutoFigure-edit 依赖 SAM3，但本项目**未**直接包含它。请遵循官方 SAM3 安装指南和先决条件。上游仓库目前针对 GPU 构建要求 Python 3.12+、PyTorch 2.7+ 和 CUDA 12.6。
+
+SAM3 权重文件托管在 Hugging Face 上，下载前可能需要申请访问权限并进行认证（例如 `huggingface-cli login`）。
+
+- SAM3 仓库: https://github.com/facebookresearch/sam3
+- SAM3 Hugging Face: https://huggingface.co/facebook/sam3
+
+### SAM3 API 模式（无需本地安装）
+
+如果您不想在本地安装 SAM3，可以使用 API 后端（Web Demo 也支持）。**我们推荐使用 [Roboflow](https://roboflow.com/)，因为它可以免费使用。**
+
+**方案 A: fal.ai**
+
+```bash
+export FAL_KEY="your-fal-key"
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider bianxie \
+  --api_key YOUR_KEY \
+  --sam_backend fal
+```
+
+**方案 B: Roboflow**
+
+```bash
+export ROBOFLOW_API_KEY="your-roboflow-key"
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider bianxie \
+  --api_key YOUR_KEY \
+  --sam_backend roboflow
+```
+
+可选 CLI 参数（API）：
+- `--sam_api_key`（覆盖 `FAL_KEY`/`ROBOFLOW_API_KEY`）
+- `--sam_max_masks`（默认 32，仅 fal.ai 后端）
 
 ## ⚙️ 配置
 
-AutoFigure 具有高度可配置性。您可以在 `Config()` 中设置这些选项，或通过环境变量进行配置。
+### 支持的 LLM 供应商
 
-### 支持的 LLM 提供商
+| 供应商 | Base URL | 备注 |
+|----------|----------|------|
+| **OpenRouter** | `openrouter.ai/api/v1` | 支持 Gemini/Claude/其他模型 |
+| **Bianxie** | `api.bianxie.ai/v1` | 兼容 OpenAI 接口 |
 
-| 提供商         | 基础 URL                | 推荐文本/SVG 模型               | 推荐图像模型                            |
-| -------------- | ----------------------- | ------------------------------- | --------------------------------------- |
-| **OpenRouter** | `openrouter.ai/api/v1`  | `google/gemini-3.1-pro-preview` | `google/gemini-3.1-flash-image-preview` |
-| **Bianxie**    | `api.bianxie.ai/v1`     | `gemini-3.1-pro-preview`        | `gemini-3.1-flash-image-preview`        |
-| **Google**     | `generativelanguage...` | `gemini-3.1-pro-preview`        | `gemini-3.1-flash-image-preview`        |
+常用 CLI 参数：
 
-### 生成设置
-
-| 选项                  | 描述                                      | 默认值       |
-| --------------------- | ----------------------------------------- | ------------ |
-| `generation_api_key`  | 图像生成 API 密钥                         | 必填         |
-| `generation_base_url` | API 基础 URL                              | 提供商默认值 |
-| `generation_model`    | 模型名称                                  | 提供商默认值 |
-| `generation_provider` | 提供商：‘openrouter’、'bianxie'、‘gemini’ | ‘openrouter’ |
-
-### 方法论提取设置
-
-| 选项                   | 描述                | 默认值         |
-| ---------------------- | ------------------- | -------------- |
-| `methodology_api_key`  | 方法论提取 API 密钥 | 与生成设置相同 |
-| `methodology_model`    | 方法论提取模型      | 与生成设置相同 |
-| `methodology_provider` | 方法论提取提供商    | 与生成设置相同 |
-
-### 增强设置
-
-| 选项                     | 描述                                    | 默认值        |
-| ------------------------ | --------------------------------------- | ------------- |
-| `enhancement_api_key`    | 图像增强的 API 密钥                     | 无            |
-| `enhancement_provider`   | 增强提供商                              | ‘openrouter’  |
-| `enhancement_model`      | 图像增强的模型                          | 提供商默认值  |
-| `enhancement_input_type` | 输入类型：‘none’、'code'、‘code2prompt’ | ‘code2prompt’ |
-| `enhancement_count`      | 要生成的增强变体数量                    | 1             |
-| `art_style`              | 增强所需的艺术风格描述                  | ‘’            |
-
-### 管道设置
-
-| 选项                | 描述             | 默认值                |
-| ------------------- | ---------------- | --------------------- |
-| `max_iterations`    | 最大精炼迭代次数 | 5                     |
-| `quality_threshold` | 质量阈值 (0-10)  | 9.0                   |
-| `output_dir`        | 输出目录         | ‘./autofigure_output’ |
-| `custom_references` | 自定义参考图路径 | 无                    |
-
----
-
-## 📚 API 参考
-
-### `generate()` 参数
-
-| 参数                     | 描述                                            |
-| ------------------------ | ----------------------------------------------- |
-| `description`            | 要生成的图形的文本描述                          |
-| `max_iterations`         | 最大迭代次数（覆盖配置）                        |
-| `output_format`          | ‘svg’ 或 ‘mxgraphxml’                           |
-| `quality_threshold`      | 质量阈值（覆盖配置）                            |
-| `enable_enhancement`     | 是否对最终图像进行增强                          |
-| `art_style`              | 增强所用的艺术风格（覆盖配置）                  |
-| `enhancement_input_type` | ‘none’、'code' 或 ‘code2prompt’（覆盖配置）     |
-| `enhancement_count`      | 增强变体数量（覆盖配置）                        |
-| `topic`                  | 内容类型：‘paper’、'survey'、‘blog’、'textbook' |
-| `custom_references`      | 自定义参考文献图路径                            |
-
-### `generate_from_paper()` 参数
-
-接受 `generate()` 中的所有参数，此外还包括：
-
-| 参数                   | 描述                            |
-| ---------------------- | ------------------------------- |
-| `paper_path`           | 论文文件路径（PDF 或 Markdown） |
-| `methodology_api_key`  | 提取 API 密钥（覆盖配置）       |
-| `methodology_provider` | 提取提供商（覆盖配置）          |
-
-### 结果对象 (`GenerationResult`)
-
-| 属性               | 描述                        |
-| ------------------ | --------------------------- |
-| `success`          | 生成是否成功                |
-| `svg_path`         | 生成的 SVG 文件路径         |
-| `mxgraph_path`     | 生成的 mxGraph XML 文件路径 |
-| `preview_path`     | PNG 预览图像路径            |
-| `enhanced_paths`   | 所有增强图像路径列表        |
-| `final_score`      | 最终质量评分（0-10）        |
-| `methodology_text` | 提取的方法论（来自论文）    |
-| `error`            | 失败时的错误信息            |
-
-### 增强模式
-
-| 模式          | 描述                                                  |
-| ------------- | ----------------------------------------------------- |
-| `none`        | 不参考代码直接美化                                    |
-| `code`        | 使用生成的代码（SVG/XML）作为参考                     |
-| `code2prompt` | 使用大语言模型（LLM）分析代码并生成详细提示词（推荐） |
+- `--provider` (openrouter | bianxie)
+- `--image_model`, `--svg_model`
+- `--sam_prompt` (逗号分隔的提示词)
+- `--sam_backend` (local | fal | roboflow | api)
+- `--sam_api_key` (API Key，默认读取 `FAL_KEY` 或 `ROBOFLOW_API_KEY`)
+- `--sam_max_masks` (fal.ai 最大 masks，默认 32)
+- `--merge_threshold` (0 禁用合并)
+- `--optimize_iterations` (0 禁用优化)
+- `--reference_image_path` (可选)
 
 ---
 
@@ -301,83 +225,51 @@ AutoFigure 具有高度可配置性。您可以在 `Config()` 中设置这些选
 <summary>点击展开目录树</summary>
 
 ```
-AutoFigure/
-├── autofigure/              # 📦 Python SDK
-│   ├── agent.py             # 主代理
-│   ├── generator.py         # 生成管道
-│   ├── enhancer.py          # 图像增强
-│   └── extractor.py         # PDF 方法提取
-├── frontend/                # 🖥️ Next.js Web UI
-├── backend/                 # 🔌 Flask API 服务器
-├── scripts/                 # 🛠️ 实用脚本
-└── pyproject.toml           # 配置文件
+AutoFigure-edit/
+├── autofigure2.py         # 主流水线
+├── server.py              # FastAPI 后端
+├── requirements.txt
+├── web/                   # 静态前端
+│   ├── index.html
+│   ├── canvas.html
+│   ├── styles.css
+│   ├── app.js
+│   └── vendor/svg-edit/   # 嵌入式 SVG 编辑器
+└── img/                   # README 资源
 ```
-
 </details>
 
 ---
 
 ## 🤝 社区与支持
 
-**微信讨论群**  
-扫描二维码加入我们的社区。如果二维码已过期，请添加微信ID `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`。
+**微信交流群**  
+扫描二维码加入我们的社区。如果二维码过期，请添加微信号 `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`。
 
-<table>
-  <tr>
-    <td><img src="img/wechat8.jpg" width="200" alt="WeChat 2"/></td>
-  </tr>
-</table>
+<img src="img/wechat3.jpg" width="200" alt="WeChat QR Code"/>
+
 ---
 
 ## 📜 引用与许可
 
-如果您在研究中使用了 **AutoFigure**、**AutoFigure-Edit** 或 **FigureBench**，请引用：
+如果您觉得 **AutoFigure** 或 **FigureBench** 对您有帮助，请引用：
 
 ```bibtex
 @inproceedings{
 zhu2026autofigure,
-title={AutoFigure: 生成与优化可直接发表的科学插图},
-author={朱敏军, 林振, 翁一轩, 卢潘中, 谢秋杰, 魏一凡, 刘思凡, 孙启瑶, 张悦},
-booktitle={第十四届学习表征国际会议},
+title={AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations},
+author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Yifan_Wei and Sifan Liu and QiYao Sun and Yue Zhang},
+booktitle={The Fourteenth International Conference on Learning Representations},
 year={2026},
 url={https://openreview.net/forum?id=5N3z9JQJKq}
 }
 
-@misc{lin2026autofigureeditgeneratingeditablescientific,
-      title={AutoFigure-Edit: 生成可编辑的科学插图},
-      作者={林振、谢秋杰、朱敏军、李世臣、孙琪瑶、顾恩浩、丁一然、孙可、郭方、卢潘中、宁志远、翁一轩、张悦},
-      年份={2026},
-      eprint={2603.06674},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2603.06674},
+@dataset{figurebench2025,
+  title = {FigureBench: A Benchmark for Automated Scientific Illustration Generation},
+  author = {WestlakeNLP},
+  year = {2025},
+  url = {https://huggingface.co/datasets/WestlakeNLP/FigureBench}
 }
 ```
 
-仓库元数据及使用指南：
-
-- [CITATION.cff](./CITATION.cff)
-- [引用与署名指南](./CITATION_AND_ATTRIBUTION.md)
-- [名称与徽标使用规范](./TRADEMARK.md)
-
-本项目采用 MIT 许可证授权——详情请参阅 `LICENSE`。
-名称和徽标的使用规则在 `TRADEMARK.md` 中另行说明。
-
----
-
-## ResearAI 的更多内容
-
-探索 ResearAI 提供的更多开源研究工具：
-
-| 项目                                                                     | 功能                 |
-| ------------------------------------------------------------------------ | -------------------- |
-| [DeepScientist](https://github.com/ResearAI/DeepScientist)               | 自主科学发现系统     |
-| [AutoFigure-Edit](https://github.com/ResearAI/AutoFigure-Edit)           | 可编辑的矢量论文图   |
-| [DeepReviewer-v2](https://github.com/ResearAI/DeepReviewer-v2)           | 论文与草稿评审       |
-| [Awesome-AI-Scientist](https://github.com/ResearAI/Awesome-AI-Scientist) | 精选 AI 科学家生态图 |
-
----
-
-本项目的最佳配置是使用 Google AI Studio [[https://aistudio.google.com/](https://aistudio.google.com/)] 中的 `gemini-3.1-flash-image-preview` 作为图像生成模型，并使用 `gemini-3.1-pro-preview` 作为文本模型。每次运行成本约为 0.50 美元，消耗约 30,000 个令牌，耗时约 20 分钟。
-
-[中国大陆地区提示] Gemini 的服务条款不允许中国大陆地区的用户访问或使用该服务。如果 OpenRouter 报错，通常是因为在中国大陆注册的账户缺乏使用Gemini所需的权限。建议使用在美国或欧洲注册的OpenRouter账户，并确保符合相关规定。
+本项目基于 MIT 许可证开源 - 详见 `LICENSE` 文件。
