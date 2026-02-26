@@ -4,6 +4,7 @@ Paper Method 到 SVG 图标替换完整流程 (Label 模式增强版 + Box合并
 支持的 API Provider：
 - openrouter: OpenRouter API (https://openrouter.ai/api/v1)
 - bianxie: Bianxie API (https://api.bianxie.ai/v1) - 使用 OpenAI SDK
+- gemini: Google Gemini 官方 API (https://ai.google.dev/)
 
 占位符模式 (--placeholder_mode):
 - none: 无特殊样式（默认黑色边框）
@@ -97,10 +98,16 @@ PROVIDER_CONFIGS = {
         "default_image_model": "gemini-3-pro-image-preview",
         "default_svg_model": "gemini-3-pro-preview",
     },
+    "gemini": {
+        "base_url": "https://generativelanguage.googleapis.com/v1beta",
+        "default_image_model": "gemini-3-pro-image-preview",
+        "default_svg_model": "gemini-2.5-pro",
+    },
 }
 
-ProviderType = Literal["openrouter", "bianxie"]
+ProviderType = Literal["openrouter", "bianxie", "gemini"]
 PlaceholderMode = Literal["none", "box", "label"]
+GEMINI_DEFAULT_IMAGE_SIZE = "4K"
 
 # SAM3 API config
 SAM3_FAL_API_URL = "https://fal.run/fal-ai/sam-3/image"
@@ -143,8 +150,9 @@ def call_llm_text(
     """
     if provider == "bianxie":
         return _call_bianxie_text(prompt, api_key, model, base_url, max_tokens, temperature)
-    else:  # openrouter
-        return _call_openrouter_text(prompt, api_key, model, base_url, max_tokens, temperature)
+    if provider == "gemini":
+        return _call_gemini_text(prompt, api_key, model, max_tokens, temperature)
+    return _call_openrouter_text(prompt, api_key, model, base_url, max_tokens, temperature)
 
 
 def call_llm_multimodal(
@@ -173,8 +181,9 @@ def call_llm_multimodal(
     """
     if provider == "bianxie":
         return _call_bianxie_multimodal(contents, api_key, model, base_url, max_tokens, temperature)
-    else:  # openrouter
-        return _call_openrouter_multimodal(contents, api_key, model, base_url, max_tokens, temperature)
+    if provider == "gemini":
+        return _call_gemini_multimodal(contents, api_key, model, max_tokens, temperature)
+    return _call_openrouter_multimodal(contents, api_key, model, base_url, max_tokens, temperature)
 
 
 def call_llm_image_generation(
@@ -200,8 +209,15 @@ def call_llm_image_generation(
     """
     if provider == "bianxie":
         return _call_bianxie_image_generation(prompt, api_key, model, base_url, reference_image)
-    else:  # openrouter
-        return _call_openrouter_image_generation(prompt, api_key, model, base_url, reference_image)
+    if provider == "gemini":
+        return _call_gemini_image_generation(
+            prompt=prompt,
+            api_key=api_key,
+            model=model,
+            reference_image=reference_image,
+            image_size=GEMINI_DEFAULT_IMAGE_SIZE,
+        )
+    return _call_openrouter_image_generation(prompt, api_key, model, base_url, reference_image)
 
 
 # ============================================================================
@@ -517,6 +533,167 @@ def _call_openrouter_image_generation(
 
 
 # ============================================================================
+# Gemini Provider 实现 (Google 官方 SDK)
+# ============================================================================
+
+def _get_gemini_client(api_key: str):
+    """获取 Gemini 客户端（延迟导入，避免非 Gemini 场景强依赖）"""
+    try:
+        from google import genai
+    except ImportError as e:
+        raise ImportError(
+            "未安装 google-genai，请执行: pip install google-genai"
+        ) from e
+    return genai.Client(api_key=api_key)
+
+
+def _build_gemini_text_config(max_tokens: int, temperature: float):
+    """构建 Gemini 文本生成配置"""
+    from google.genai import types
+
+    return types.GenerateContentConfig(
+        max_output_tokens=max_tokens,
+        temperature=temperature,
+    )
+
+
+def _extract_gemini_text(response: Any) -> Optional[str]:
+    """从 Gemini 响应中提取文本"""
+    text = getattr(response, "text", None)
+    if isinstance(text, str) and text.strip():
+        return text
+
+    parts = getattr(response, "parts", None) or []
+    extracted: list[str] = []
+    for part in parts:
+        part_text = getattr(part, "text", None)
+        if isinstance(part_text, str) and part_text.strip():
+            extracted.append(part_text)
+    if extracted:
+        return "\n".join(extracted)
+
+    candidates = getattr(response, "candidates", None) or []
+    for candidate in candidates:
+        content = getattr(candidate, "content", None)
+        candidate_parts = getattr(content, "parts", None) or []
+        for part in candidate_parts:
+            part_text = getattr(part, "text", None)
+            if isinstance(part_text, str) and part_text.strip():
+                extracted.append(part_text)
+    if extracted:
+        return "\n".join(extracted)
+
+    return None
+
+
+def _extract_gemini_image(response: Any) -> Optional[Image.Image]:
+    """从 Gemini 响应中提取图片（优先使用 part.as_image()）"""
+    parts = getattr(response, "parts", None) or []
+    for part in parts:
+        as_image = getattr(part, "as_image", None)
+        if callable(as_image):
+            image = as_image()
+            if image is not None:
+                return image
+
+        inline_data = getattr(part, "inline_data", None) or getattr(part, "inlineData", None)
+        if inline_data is None:
+            continue
+        data = getattr(inline_data, "data", None)
+        if isinstance(data, bytes) and data:
+            return Image.open(io.BytesIO(data))
+        if isinstance(data, str) and data:
+            return Image.open(io.BytesIO(base64.b64decode(data)))
+
+    candidates = getattr(response, "candidates", None) or []
+    for candidate in candidates:
+        content = getattr(candidate, "content", None)
+        candidate_parts = getattr(content, "parts", None) or []
+        for part in candidate_parts:
+            as_image = getattr(part, "as_image", None)
+            if callable(as_image):
+                image = as_image()
+                if image is not None:
+                    return image
+    return None
+
+
+def _call_gemini_text(
+    prompt: str,
+    api_key: str,
+    model: str,
+    max_tokens: int = 16000,
+    temperature: float = 0.7,
+) -> Optional[str]:
+    """调用 Gemini 文本接口"""
+    try:
+        client = _get_gemini_client(api_key)
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config=_build_gemini_text_config(max_tokens=max_tokens, temperature=temperature),
+        )
+        return _extract_gemini_text(response)
+    except Exception as e:
+        print(f"[Gemini] 文本 API 调用失败: {e}")
+        raise
+
+
+def _call_gemini_multimodal(
+    contents: List[Any],
+    api_key: str,
+    model: str,
+    max_tokens: int = 16000,
+    temperature: float = 0.7,
+) -> Optional[str]:
+    """调用 Gemini 多模态接口"""
+    try:
+        client = _get_gemini_client(api_key)
+        response = client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=_build_gemini_text_config(max_tokens=max_tokens, temperature=temperature),
+        )
+        return _extract_gemini_text(response)
+    except Exception as e:
+        print(f"[Gemini] 多模态 API 调用失败: {e}")
+        raise
+
+
+def _call_gemini_image_generation(
+    prompt: str,
+    api_key: str,
+    model: str,
+    reference_image: Optional[Image.Image] = None,
+    image_size: str = GEMINI_DEFAULT_IMAGE_SIZE,
+) -> Optional[Image.Image]:
+    """调用 Gemini 生图接口，默认 image_size=4K"""
+    try:
+        from google.genai import types
+
+        client = _get_gemini_client(api_key)
+        config = types.GenerateContentConfig(
+            image_config=types.ImageConfig(image_size=image_size),
+        )
+
+        if reference_image is None:
+            contents: list[Any] = [prompt]
+        else:
+            # 参考图放在前面，提示语在后，遵循 Gemini 多模态输入习惯
+            contents = [reference_image, prompt]
+
+        response = client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=config,
+        )
+        return _extract_gemini_image(response)
+    except Exception as e:
+        print(f"[Gemini] 图像生成 API 调用失败: {e}")
+        raise
+
+
+# ============================================================================
 # 步骤一：调用 LLM 生成图片
 # ============================================================================
 
@@ -615,8 +792,14 @@ The figure should be engaging and using academic journal style with cute charact
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 转换为 PNG 保存
-    img.save(str(output_path), format='PNG')
+    # 转换为 PNG 保存（Gemini 返回的图片对象 save() 可能不接受 format 参数）
+    try:
+        img.save(str(output_path), format='PNG')
+    except TypeError:
+        img.save(str(output_path))
+        # 某些 SDK 对象会按自身默认编码写盘（如 JPEG），这里强制转存为真实 PNG
+        with Image.open(str(output_path)) as normalized:
+            normalized.save(str(output_path), format='PNG')
     print(f"图片已保存: {output_path}")
     return str(output_path)
 
@@ -2496,7 +2679,7 @@ if __name__ == "__main__":
     # Provider 参数
     parser.add_argument(
         "--provider",
-        choices=["openrouter", "bianxie"],
+        choices=["openrouter", "bianxie", "gemini"],
         default="bianxie",
         help="API 提供商（默认: bianxie）"
     )

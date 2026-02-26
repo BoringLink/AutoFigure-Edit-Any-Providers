@@ -17,6 +17,27 @@
     const referenceFile = $("referenceFile");
     const referencePreview = $("referencePreview");
     const referenceStatus = $("referenceStatus");
+    const samBackend = $("samBackend");
+    const samApiKeyGroup = $("samApiKeyGroup");
+    const samApiKeyInput = $("samApiKey");
+    let uploadedReferencePath = null;
+
+    function syncSamApiKeyVisibility() {
+      const shouldShow =
+        samBackend &&
+        (samBackend.value === "fal" || samBackend.value === "roboflow");
+      if (samApiKeyGroup) {
+        samApiKeyGroup.hidden = !shouldShow;
+      }
+      if (!shouldShow && samApiKeyInput) {
+        samApiKeyInput.value = "";
+      }
+    }
+
+    if (samBackend) {
+      samBackend.addEventListener("change", syncSamApiKeyVisibility);
+      syncSamApiKeyVisibility();
+    }
 
     if (uploadZone && referenceFile) {
       uploadZone.addEventListener("click", () => referenceFile.click());
@@ -27,18 +48,24 @@
       uploadZone.addEventListener("dragleave", () => {
         uploadZone.classList.remove("dragging");
       });
-      uploadZone.addEventListener("drop", (event) => {
+      uploadZone.addEventListener("drop", async (event) => {
         event.preventDefault();
         uploadZone.classList.remove("dragging");
         const file = event.dataTransfer.files[0];
         if (file) {
-          uploadReference(file, confirmBtn, referencePreview, referenceStatus);
+          const uploadedPath = await uploadReference(file, confirmBtn, referencePreview, referenceStatus);
+          if (uploadedPath) {
+            uploadedReferencePath = uploadedPath;
+          }
         }
       });
-      referenceFile.addEventListener("change", () => {
+      referenceFile.addEventListener("change", async () => {
         const file = referenceFile.files[0];
         if (file) {
-          uploadReference(file, confirmBtn, referencePreview, referenceStatus);
+          const uploadedPath = await uploadReference(file, confirmBtn, referencePreview, referenceStatus);
+          if (uploadedPath) {
+            uploadedReferencePath = uploadedPath;
+          }
         }
       });
     }
@@ -59,10 +86,13 @@
         provider: $("provider").value,
         api_key: $("apiKey").value.trim() || null,
         optimize_iterations: parseInt($("optimizeIterations").value, 10),
-        reference_image_path: $("referenceImage").value.trim() || null,
+        reference_image_path: uploadedReferencePath,
         sam_backend: $("samBackend").value,
         sam_api_key: $("samApiKey").value.trim() || null,
       };
+      if (payload.sam_backend === "local") {
+        payload.sam_api_key = null;
+      }
 
       try {
         const response = await fetch("/api/run", {
@@ -89,7 +119,7 @@
   async function uploadReference(file, confirmBtn, previewEl, statusEl) {
     if (!file.type.startsWith("image/")) {
       statusEl.textContent = "Only image files are supported.";
-      return;
+      return null;
     }
 
     confirmBtn.disabled = true;
@@ -110,17 +140,15 @@
       }
 
       const data = await response.json();
-      const referenceInput = $("referenceImage");
-      if (referenceInput) {
-        referenceInput.value = data.path;
-      }
       statusEl.textContent = `Using uploaded reference: ${data.name}`;
       if (previewEl) {
         previewEl.src = data.url || "";
         previewEl.classList.add("visible");
       }
+      return data.path || null;
     } catch (err) {
       statusEl.textContent = err.message || "Upload failed";
+      return null;
     } finally {
       confirmBtn.disabled = false;
     }

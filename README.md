@@ -151,7 +151,7 @@ AutoFigure-edit provides a visual web interface designed for seamless generation
 <img src="img/demo_start.png" width="100%" alt="Configuration Page" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
 
 On the start page, paste your paper's method text on the left. On the right, configure your generation settings:
-*   **Provider:** Select your LLM provider (OpenRouter or Bianxie).
+*   **Provider:** Select your LLM provider (OpenRouter, Bianxie, or Gemini).
 *   **Optimize:** Set SVG template refinement iterations (recommend `0` for standard use).
 *   **Reference Image:** Upload a target image to enable style transfer.
 *   **SAM3 Backend:** Choose local SAM3 or the fal.ai API (API key optional).
@@ -217,10 +217,11 @@ Optional CLI flags (API):
 |----------|----------|------|
 | **OpenRouter** | `openrouter.ai/api/v1` | Supports Gemini/Claude/others |
 | **Bianxie** | `api.bianxie.ai/v1` | OpenAI-compatible API |
+| **Gemini (Google)** | `generativelanguage.googleapis.com/v1beta` | Official Google Gemini API (`google-genai`) |
 
 Common CLI flags:
 
-- `--provider` (openrouter | bianxie)
+- `--provider` (openrouter | bianxie | gemini)
 - `--image_model`, `--svg_model`
 - `--sam_prompt` (comma-separated prompts)
 - `--sam_backend` (local | fal | roboflow | api)
