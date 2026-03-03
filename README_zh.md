@@ -26,6 +26,11 @@
 </div>
 
 ---
+## 🔥 新闻
+
+- **[2026.02.17]** **AutoFigure-Edit 在线平台** 正式上线！供所有学者免费使用。欢迎前往 [deepscientist.cc](https://deepscientist.cc) 体验。
+- **[2026.01.26]** AutoFigure 被 **ICLR 2026** 接收！您可以在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
+---
 
 ## ✨ 特性
 
@@ -141,7 +146,7 @@ AutoFigure-edit 提供了一个可视化的 Web 界面，旨在实现无缝的�
 <img src="img/demo_start.png" width="100%" alt="配置页面" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
 
 在起始页面左侧粘贴论文的方法文本。在右侧配置生成选项：
-*   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter 或 Bianxie）。
+*   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter、Bianxie 或 Gemini）。
 *   **优化 (Optimize):** 设置 SVG 模板的优化迭代次数（日常使用建议设为 `0`）。
 *   **参考图片 (Reference Image):** 上传目标图片以启用风格迁移功能。
 *   **SAM3 后端:** 选择本地 SAM3 或 fal.ai API（API Key 可选）。
@@ -204,10 +209,11 @@ python autofigure2.py \
 |----------|----------|------|
 | **OpenRouter** | `openrouter.ai/api/v1` | 支持 Gemini/Claude/其他模型 |
 | **Bianxie** | `api.bianxie.ai/v1` | 兼容 OpenAI 接口 |
+| **Gemini (Google)** | `generativelanguage.googleapis.com/v1beta` | Google 官方 Gemini API（`google-genai`） |
 
 常用 CLI 参数：
 
-- `--provider` (openrouter | bianxie)
+- `--provider` (openrouter | bianxie | gemini)
 - `--image_model`, `--svg_model`
 - `--sam_prompt` (逗号分隔的提示词)
 - `--sam_backend` (local | fal | roboflow | api)
