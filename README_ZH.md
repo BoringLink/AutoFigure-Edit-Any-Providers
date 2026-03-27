@@ -28,6 +28,7 @@
 ---
 ## 🔥 新闻
 
+- **[2026.03.24]** 🧠 我们的姊妹项目 **DeepScientist v1.5** 已正式发布。这是一个面向端到端科学发现的本地优先开源自主科研系统。欢迎访问 [GitHub](https://github.com/ResearAI/DeepScientist) 或阅读 [ICLR 2026 论文](https://openreview.net/forum?id=cZFgsLq8Gs)。
 - **[2026.02.17]** **AutoFigure-Edit 在线平台** 正式上线！供所有学者免费使用。欢迎前往 [deepscientist.cc](https://deepscientist.cc) 体验。
 - **[2026.01.26]** AutoFigure 被 **ICLR 2026** 接收！您可以在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
 ---
@@ -363,16 +364,26 @@ AutoFigure-edit/
 
 ## 📜 引用与许可
 
-如果您觉得 **AutoFigure** 或 **FigureBench** 对您有帮助，请引用：
+如果您觉得 **AutoFigure**、**AutoFigure-Edit** 或 **FigureBench** 对您有帮助，请引用：
 
 ```bibtex
 @inproceedings{
 zhu2026autofigure,
 title={AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations},
-author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Yifan_Wei and Sifan Liu and QiYao Sun and Yue Zhang},
+author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Sifan Liu and Qiyao Sun and Yue Zhang},
 booktitle={The Fourteenth International Conference on Learning Representations},
 year={2026},
 url={https://openreview.net/forum?id=5N3z9JQJKq}
+}
+
+@misc{lin2026autofigureeditgeneratingeditablescientific,
+      title={AutoFigure-Edit: Generating Editable Scientific Illustration}, 
+      author={Zhen Lin and Qiujie Xie and Minjun Zhu and Shichen Li and Qiyao Sun and Enhao Gu and Yiran Ding and Ke Sun and Fang Guo and Panzhong Lu and Zhiyuan Ning and Yixuan Weng and Yue Zhang},
+      year={2026},
+      eprint={2603.06674},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2603.06674}, 
 }
 
 @dataset{figurebench2025,
@@ -384,3 +395,16 @@ url={https://openreview.net/forum?id=5N3z9JQJKq}
 ```
 
 本项目基于 MIT 许可证开源 - 详见 `LICENSE` 文件。
+
+---
+
+## 更多来自 ResearAI 的项目
+
+以下是一些值得一看的 ResearAI 开源项目：
+
+| 项目 | 简介 |
+|---|---|
+| [DeepScientist](https://github.com/ResearAI/DeepScientist) | 端到端自主科研系统 |
+| [AutoFigure](https://github.com/ResearAI/AutoFigure) | 从文本或论文生成论文级插图 |
+| [DeepReviewer-v2](https://github.com/ResearAI/DeepReviewer-v2) | 审稿、论文与 rebuttal 辅助 |
+| [Awesome-AI-Scientist](https://github.com/ResearAI/Awesome-AI-Scientist) | AI Scientist 生态精选 |
