@@ -353,11 +353,12 @@ AutoFigure-edit/
 ## 🤝 社区与支持
 
 **微信交流群**  
-扫描二维码加入我们的社区。如果二维码过期，请添加微信号 `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`。
+扫描二维码加入我们的社区。如果二维码过期，请添加微信号 `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`并附上备注信息~
 
 <table>
   <tr>
-    <td><img src="img/wechat6.jpg" width="200" alt="WeChat 2"/></td>
+    <td><img src="img/wechat6.jpg" width="200" alt="WeChat 1"/></td>
+    <td><img src="img/wechat7.jpg" width="200" alt="WeChat 2"/></td>
   </tr>
 </table>
 ---
