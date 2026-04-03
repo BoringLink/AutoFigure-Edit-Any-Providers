@@ -28,6 +28,7 @@
 ---
 ## 🔥 新闻
 
+- **[2026.03.24]** 🧠 我们的姊妹项目 **DeepScientist v1.5** 已正式发布。这是一个面向端到端科学发现的本地优先开源自主科研系统。欢迎访问 [GitHub](https://github.com/ResearAI/DeepScientist) 或阅读 [ICLR 2026 论文](https://openreview.net/forum?id=cZFgsLq8Gs)。
 - **[2026.02.17]** **AutoFigure-Edit 在线平台** 正式上线！供所有学者免费使用。欢迎前往 [deepscientist.cc](https://deepscientist.cc) 体验。
 - **[2026.01.26]** AutoFigure 被 **ICLR 2026** 接收！您可以在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
 ---
@@ -250,6 +251,7 @@ AutoFigure-edit 提供了一个可视化的 Web 界面，旨在实现无缝的�
 在起始页面左侧粘贴论文的方法文本。在右侧配置生成选项：
 *   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter、Bianxie 或 Gemini）。
 *   **优化 (Optimize):** 设置 SVG 模板的优化迭代次数（日常使用建议设为 `0`）。
+*   **图片分辨率 (Image Size):** 仅在 **Gemini** 模式下可选，可设置为 `1K`、`2K` 或 `4K`。
 *   **参考图片 (Reference Image):** 上传目标图片以启用风格迁移功能。
 *   **SAM3 后端:** 选择本地 SAM3 或 fal.ai API（API Key 可选）。
 
@@ -317,6 +319,7 @@ python autofigure2.py \
 
 - `--provider` (openrouter | bianxie | gemini)
 - `--image_model`, `--svg_model`
+- `--image_size` (1K | 2K | 4K，仅 Gemini)
 - `--sam_prompt` (逗号分隔的提示词)
 - `--sam_backend` (local | fal | roboflow | api)
 - `--sam_api_key` (API Key，默认读取 `FAL_KEY` 或 `ROBOFLOW_API_KEY`)
@@ -324,6 +327,17 @@ python autofigure2.py \
 - `--merge_threshold` (0 禁用合并)
 - `--optimize_iterations` (0 禁用优化)
 - `--reference_image_path` (可选)
+
+### 自定义提供商 / 自定义 Base URL
+
+如果你希望接入自部署或第三方的 OpenAI 兼容接口，可以使用：
+
+- `--provider openrouter`
+- `--base_url <你的接口地址>`
+- `--image_model <生图模型 ID>`
+- `--svg_model <SVG 模型 ID>`
+
+这种方式本质上是把你的 `base_url` 当作一个兼容 OpenAI 协议的自定义提供商来调用。请确认该接口同时支持图片生成和多模态 SVG 重建，再用于完整任务。
 
 ---
 
@@ -352,27 +366,38 @@ AutoFigure-edit/
 ## 🤝 社区与支持
 
 **微信交流群**  
-扫描二维码加入我们的社区。如果二维码过期，请添加微信号 `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`。
+扫描二维码加入我们的社区。如果二维码过期，请添加微信号 `nauhcutnil` 或联系 `tuchuan@mail.hfut.edu.cn`并附上备注信息~
 
 <table>
   <tr>
-    <td><img src="img/wechat6.jpg" width="200" alt="WeChat 2"/></td>
+    <td><img src="img/wechat7.jpg" width="200" alt="WeChat 1"/></td>
+    <td><img src="img/wechat8.jpg" width="200" alt="WeChat 2"/></td>
   </tr>
 </table>
 ---
 
 ## 📜 引用与许可
 
-如果您觉得 **AutoFigure** 或 **FigureBench** 对您有帮助，请引用：
+如果您觉得 **AutoFigure**、**AutoFigure-Edit** 或 **FigureBench** 对您有帮助，请引用：
 
 ```bibtex
 @inproceedings{
 zhu2026autofigure,
 title={AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations},
-author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Yifan_Wei and Sifan Liu and QiYao Sun and Yue Zhang},
+author={Minjun Zhu and Zhen Lin and Yixuan Weng and Panzhong Lu and Qiujie Xie and Yifan Wei and Sifan Liu and Qiyao Sun and Yue Zhang},
 booktitle={The Fourteenth International Conference on Learning Representations},
 year={2026},
 url={https://openreview.net/forum?id=5N3z9JQJKq}
+}
+
+@misc{lin2026autofigureeditgeneratingeditablescientific,
+      title={AutoFigure-Edit: Generating Editable Scientific Illustration}, 
+      author={Zhen Lin and Qiujie Xie and Minjun Zhu and Shichen Li and Qiyao Sun and Enhao Gu and Yiran Ding and Ke Sun and Fang Guo and Panzhong Lu and Zhiyuan Ning and Yixuan Weng and Yue Zhang},
+      year={2026},
+      eprint={2603.06674},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2603.06674}, 
 }
 
 @dataset{figurebench2025,
@@ -384,3 +409,16 @@ url={https://openreview.net/forum?id=5N3z9JQJKq}
 ```
 
 本项目基于 MIT 许可证开源 - 详见 `LICENSE` 文件。
+
+---
+
+## 更多来自 ResearAI 的项目
+
+以下是一些值得一看的 ResearAI 开源项目：
+
+| 项目 | 简介 |
+|---|---|
+| [DeepScientist](https://github.com/ResearAI/DeepScientist) | 端到端自主科研系统 |
+| [AutoFigure](https://github.com/ResearAI/AutoFigure) | 从文本或论文生成论文级插图 |
+| [DeepReviewer-v2](https://github.com/ResearAI/DeepReviewer-v2) | 审稿、论文与 rebuttal 辅助 |
+| [Awesome-AI-Scientist](https://github.com/ResearAI/Awesome-AI-Scientist) | AI Scientist 生态精选 |
