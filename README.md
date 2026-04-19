@@ -427,6 +427,10 @@ url={https://openreview.net/forum?id=5N3z9JQJKq}
 }
 ```
 
+## 🙏 Acknowledgments
+
+We would like to thank the [Linux.do](https://linux.do/) community for their support.
+
 This project is licensed under the MIT License - see `LICENSE` for details.
 
 ---
