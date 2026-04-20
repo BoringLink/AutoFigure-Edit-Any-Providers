@@ -1,14 +1,14 @@
 <div align="center">
 
-<img src="img/logo.png" alt="AutoFigure-edit Logo" width="100%"/>
+<img src="img/logo.png" alt="AutoFigure-Edit Logo" width="100%"/>
 
-# AutoFigure: Generating and Refining Publication-Ready Scientific Illustrations [ICLR 2026]
+# AutoFigure-Edit: Generating Editable Scientific Illustration
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README_ZH.md">中文</a>
 </p>
 
-[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue?style=for-the-badge&logo=openreview)](https://openreview.net/forum?id=5N3z9JQJKq)
+[![arXiv 2603.06674](https://img.shields.io/badge/arXiv-2603.06674-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2603.06674)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-FigureBench-orange?style=for-the-badge)](https://huggingface.co/datasets/WestlakeNLP/FigureBench)
@@ -16,13 +16,13 @@
 
 <p align="center">
   <strong>From Method Text to Editable SVG</strong><br>
-  AutoFigure-edit is the next version of AutoFigure. It turns paper method sections into fully editable SVG figures and lets you refine them in an embedded SVG editor.
+  AutoFigure-Edit is the next version of AutoFigure. It turns paper method sections into fully editable SVG figures and lets you refine them in an embedded SVG editor.
 </p>
 
 [Quick Start](#-quick-start) • [Web Interface](#-web-interface) • [How It Works](#-how-it-works) • [Configuration](#-configuration) • [Citation](#-citation--license)
 
-[[`Paper`](https://openreview.net/forum?id=5N3z9JQJKq)]
-[[`Project`](https://github.com/ResearAI/AutoFigure)]
+[[`Paper`](https://arxiv.org/abs/2603.06674)]
+[[`AutoFigure`](https://github.com/ResearAI/AutoFigure)]
 [[`BibTeX`](#-citation--license)]
 
 </div>
@@ -215,7 +215,7 @@ docker compose down
 - Current default models:
   - `openrouter`: image `google/gemini-3.1-flash-image-preview`, svg `google/gemini-3.1-pro-preview`
   - `bianxie`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
-  - `gemini`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro`
+  - `gemini`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
 
 #### 6) Common Docker networking issues
 
@@ -427,11 +427,18 @@ url={https://openreview.net/forum?id=5N3z9JQJKq}
 }
 ```
 
+Repository metadata and usage guidance:
+
+- [CITATION.cff](./CITATION.cff)
+- [Citation and attribution guidance](./docs/en/26_CITATION_AND_ATTRIBUTION.md)
+- [Name and logo usage](./TRADEMARK.md)
+
 ## 🙏 Acknowledgments
 
 We would like to thank the [Linux.do](https://linux.do/) community for their support.
 
 This project is licensed under the MIT License - see `LICENSE` for details.
+Name and logo usage are covered separately in `TRADEMARK.md`.
 
 ---
 

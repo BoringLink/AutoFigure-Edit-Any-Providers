@@ -197,9 +197,9 @@ docker compose down
 - Docker/Web 默认 SAM 后端：`roboflow`
 - 默认 SAM Prompt：`icon,person,robot,animal`
 - 当前默认模型：
-  - `openrouter`：image `google/gemini-3-pro-image-preview`，svg `google/gemini-3.1-pro-preview`
-  - `bianxie`：image `gemini-3-pro-image-preview`，svg `gemini-3.1-pro-preview`
-  - `gemini`：image `gemini-3-pro-image-preview`，svg `gemini-3.1-pro`
+  - `openrouter`：image `google/gemini-3.1-flash-image-preview`，svg `google/gemini-3.1-pro-preview`
+  - `bianxie`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
+  - `gemini`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
 
 #### 6）常见 Docker 网络问题
 

@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 ## AutoFigure Trademark Guidelines
 
 This document explains how the `AutoFigure` name, logo, and related branding may be used.
+=======
+## AutoFigure-Edit Trademark Guidelines
+
+This document explains how the `AutoFigure-Edit` name, logo, and related branding may be used.
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 It is intended to be practical and lightweight. It does not change the open-source software license.
 
@@ -8,10 +14,16 @@ It is intended to be practical and lightweight. It does not change the open-sour
 
 These guidelines apply to:
 
+<<<<<<< HEAD
 - the `AutoFigure` name
 - the `FigureBench` name when used as part of the official AutoFigure project materials
 - the AutoFigure logo and visual brand assets
 - official project, product, and service names used by ResearAI for AutoFigure
+=======
+- the `AutoFigure-Edit` name
+- the AutoFigure-Edit logo and visual brand assets
+- official project, product, and service names used by ResearAI for AutoFigure-Edit
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 The source code remains licensed under the repository's software license.
 Trademark rights are separate from copyright and software license rights.
@@ -20,6 +32,7 @@ Trademark rights are separate from copyright and software license rights.
 
 You may generally do the following without asking for separate permission:
 
+<<<<<<< HEAD
 - use the name `AutoFigure` to factually refer to this project
 - say that your work is based on, compatible with, or built with AutoFigure
 - link to the official repository, paper, website, dataset page, and documentation
@@ -42,15 +55,46 @@ Without prior written permission, please do not:
 - use the AutoFigure logo as the primary brand for a modified or third-party product
 - name a modified distribution in a way that strongly suggests it is the official release
 - register or use domain names, package names, app listings, or social-media handles that are likely to confuse users into thinking your project is the official AutoFigure offering
+=======
+- use the name `AutoFigure-Edit` to factually refer to this project
+- say that your work is based on, compatible with, or built with AutoFigure-Edit
+- link to the official repository, paper, website, and documentation
+- discuss, review, compare, benchmark, or cite AutoFigure-Edit in papers, blog posts, talks, and tutorials
+- fork the code and state that your fork originated from AutoFigure-Edit
+
+Examples of generally acceptable use:
+
+- `Built with AutoFigure-Edit`
+- `This project is a fork of AutoFigure-Edit`
+- `Compatible with AutoFigure-Edit SVG workflow`
+
+### 3. What requires extra care
+
+Please do not use the `AutoFigure-Edit` name, logo, or branding in ways that are likely to confuse users about source, sponsorship, certification, or official status.
+
+Without prior written permission, please do not:
+
+- present your fork, hosted service, plugin, benchmark, or derivative product as the official AutoFigure-Edit project
+- use the AutoFigure-Edit logo as the primary brand for a modified or third-party product
+- name a modified distribution in a way that strongly suggests it is the official release
+- register or use domain names, package names, app listings, or social-media handles that are likely to confuse users into thinking your project is the official AutoFigure-Edit offering
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 - imply endorsement, certification, partnership, or approval by ResearAI when that is not true
 - use phrases such as `official`, `certified`, `by ResearAI`, or similar claims in a misleading way
 
 Examples of problematic use:
 
+<<<<<<< HEAD
 - `Official AutoFigure Cloud`
 - `AutoFigure Enterprise` for an unrelated third-party hosted product
 - using `autofigure` as the primary package or service name for a modified public distribution without clearly identifying it as unofficial
 - shipping a modified fork under the unchanged AutoFigure product name in a way that hides that it is a fork
+=======
+- `Official AutoFigure-Edit Cloud`
+- `AutoFigure-Edit Studio` for an unrelated third-party hosted product
+- using `autofigure-edit` as the primary package or service name for a modified public distribution without clearly identifying it as unofficial
+- shipping a modified fork under the unchanged AutoFigure-Edit product name in a way that hides that it is a fork
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 ### 4. Forks and modified versions
 
@@ -60,15 +104,25 @@ If you distribute a modified version as a separate product or service, please ma
 
 Good patterns include:
 
+<<<<<<< HEAD
 - `ProjectName, based on AutoFigure`
 - `AutoFigure fork by <your org>`
 - `Modified AutoFigure build for internal use`
+=======
+- `ProjectName, based on AutoFigure-Edit`
+- `AutoFigure-Edit fork by <your org>`
+- `Modified AutoFigure-Edit build for internal use`
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 If your fork is becoming a distinct public-facing product, we strongly prefer that you adopt your own primary product name and branding.
 
 ### 5. Nominative and descriptive use
 
+<<<<<<< HEAD
 We do not object to reasonable nominative or descriptive use of the AutoFigure name when you are accurately referring to the project.
+=======
+We do not object to reasonable nominative or descriptive use of the AutoFigure-Edit name when you are accurately referring to the project.
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 That includes:
 
@@ -90,19 +144,32 @@ They only address branding, naming, and source-identification issues.
 
 ### 7. Citation and attribution
 
+<<<<<<< HEAD
 If AutoFigure materially helps a paper, report, or public figure artifact, we strongly encourage citation of the AutoFigure paper and clear disclosure of meaningful AI assistance.
+=======
+If AutoFigure-Edit materially helps a paper, report, or public figure artifact, we strongly encourage citation of the AutoFigure-Edit paper and clear disclosure of meaningful AI assistance.
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 See:
 
 - [README.md](./README.md)
+<<<<<<< HEAD
 - [CITATION_AND_ATTRIBUTION.md](./CITATION_AND_ATTRIBUTION.md)
+=======
+- [docs/en/26_CITATION_AND_ATTRIBUTION.md](./docs/en/26_CITATION_AND_ATTRIBUTION.md)
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 
 ### 8. Questions and permissions
 
 If you want to:
 
+<<<<<<< HEAD
 - use the AutoFigure logo in a commercial context
 - use the AutoFigure name for a public hosted service
+=======
+- use the AutoFigure-Edit logo in a commercial context
+- use the AutoFigure-Edit name for a public hosted service
+>>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
 - request explicit permission for co-branding or partnership-style usage
 
 please contact:
