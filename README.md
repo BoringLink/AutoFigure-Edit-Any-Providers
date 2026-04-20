@@ -430,7 +430,7 @@ url={https://openreview.net/forum?id=5N3z9JQJKq}
 Repository metadata and usage guidance:
 
 - [CITATION.cff](./CITATION.cff)
-- [Citation and attribution guidance](./docs/en/26_CITATION_AND_ATTRIBUTION.md)
+- [Citation and attribution guidance](./CITATION_AND_ATTRIBUTION.md)
 - [Name and logo usage](./TRADEMARK.md)
 
 ## 🙏 Acknowledgments

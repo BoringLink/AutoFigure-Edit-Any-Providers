@@ -154,10 +154,14 @@ See:
 
 - [README.md](./README.md)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - [CITATION_AND_ATTRIBUTION.md](./CITATION_AND_ATTRIBUTION.md)
 =======
 - [docs/en/26_CITATION_AND_ATTRIBUTION.md](./docs/en/26_CITATION_AND_ATTRIBUTION.md)
 >>>>>>> b6b3369 (docs: add citation guidance and align Gemini defaults)
+=======
+- [CITATION_AND_ATTRIBUTION.md](./CITATION_AND_ATTRIBUTION.md)
+>>>>>>> d0e7f23 (docs: simplify citation attribution doc path)
 
 ### 8. Questions and permissions
 
