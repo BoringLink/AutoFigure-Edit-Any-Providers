@@ -370,7 +370,7 @@ AutoFigure-edit/
 
 <table>
   <tr>
-    <td><img src="img/wechat10.jpg" width="200" alt="WeChat 2"/></td>
+    <td><img src="img/wechat8.jpg" width="200" alt="WeChat 2"/></td>
   </tr>
 </table>
 ---
