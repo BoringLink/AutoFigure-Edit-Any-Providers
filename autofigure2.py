@@ -5,6 +5,8 @@ Paper Method 到 SVG 图标替换完整流程 (Label 模式增强版 + Box合并
 - openrouter: OpenRouter API (https://openrouter.ai/api/v1)
 - bianxie: Bianxie API (https://api.bianxie.ai/v1) - 使用 OpenAI SDK
 - gemini: Google Gemini 官方 API (https://ai.google.dev/)
+- openai: OpenAI Images API（仅步骤一生图 override）
+- openai_response: OpenAI Responses API（文本/多模态 SVG 重建）
 
 占位符模式 (--placeholder_mode):
 - none: 无特殊样式（默认黑色边框）
@@ -24,12 +26,12 @@ Box合并功能 (--merge_threshold):
 - 跨prompt检测结果也会自动去重
 
 流程：
-1. 输入 paper method 文本，调用 Gemini 生成学术风格图片 -> figure.png
+1. 输入 paper method 文本，调用图像模型生成学术风格图片 -> figure.png
 2. SAM3 分割图片，用灰色填充+黑色边框+序号标记 -> samed.png + boxlib.json
    2.1 支持多个text prompts分别检测
    2.2 合并重叠的boxes（可选，通过 --merge_threshold 控制）
 3. 裁切分割区域 + RMBG2 去背景 -> icons/icon_AF01_nobg.png, icon_AF02_nobg.png...
-4. 多模态调用 Gemini 生成 SVG（占位符样式与 samed.png 一致）-> template.svg
+4. 多模态调用 LLM 生成 SVG（占位符样式与 samed.png 一致）-> template.svg
 4.5. SVG 语法验证（lxml）+ LLM 修复
 4.6. LLM 优化 SVG 模板（位置和样式对齐）-> optimized_template.svg
      可通过 --optimize_iterations 参数控制迭代次数（0 表示跳过优化）
@@ -42,6 +44,9 @@ Box合并功能 (--merge_threshold):
 
     # 使用 OpenRouter
     python iou_autofigure.py --method_file paper_method.txt --output_dir ./output --api_key "sk-or-v1-xxx" --provider openrouter
+
+    # 仅步骤一改用 OpenAI GPT-Image，步骤四仍走原 provider
+    python iou_autofigure.py --method_file paper_method.txt --output_dir ./output --provider gemini --api_key "gemini-key" --image_provider openai --image_api_key "sk-openai-xxx" --image_model gpt-image-2
 
     # 使用 box 模式（传入坐标）
     python iou_autofigure.py --method_file paper_method.txt --output_dir ./output --placeholder_mode box
@@ -79,7 +84,7 @@ from typing import Optional, List, Dict, Any, Literal
 import requests
 import numpy as np
 import torch
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from torchvision import transforms
 from transformers import AutoModelForImageSegmentation
 
@@ -94,6 +99,11 @@ PROVIDER_CONFIGS = {
         "default_image_model": "google/gemini-3.1-flash-image-preview",
         "default_svg_model": "google/gemini-3.1-pro-preview",
     },
+    "custom": {
+        "base_url": "https://api.bianxie.ai/v1",
+        "default_image_model": "gemini-3.1-flash-image-preview",
+        "default_svg_model": "gemini-3.1-pro-preview",
+    },
     "bianxie": {
         "base_url": "https://api.bianxie.ai/v1",
         "default_image_model": "gemini-3.1-flash-image-preview",
@@ -104,12 +114,29 @@ PROVIDER_CONFIGS = {
         "default_image_model": "gemini-3.1-flash-image-preview",
         "default_svg_model": "gemini-3.1-pro-preview",
     },
+    "openai_response": {
+        "base_url": "https://api.openai.com/v1",
+        "default_image_model": "gpt-image-2",
+        "default_svg_model": "gpt-5.4",
+    },
 }
 
-ProviderType = Literal["openrouter", "bianxie", "gemini"]
+IMAGE_PROVIDER_CONFIGS = {
+    **PROVIDER_CONFIGS,
+    "openai": {
+        "base_url": "https://api.openai.com/v1",
+        "default_image_model": "gpt-image-2",
+    },
+}
+
+ProviderType = Literal["openrouter", "custom", "bianxie", "gemini", "openai_response"]
+ImageProviderType = Literal["openrouter", "custom", "bianxie", "gemini", "openai"]
 PlaceholderMode = Literal["none", "box", "label"]
 GEMINI_DEFAULT_IMAGE_SIZE = "4K"
 IMAGE_SIZE_CHOICES = ("1K", "2K", "4K")
+OPENAI_DEFAULT_IMAGE_SIZE = "1536x1024"
+OPENAI_IMAGE_SIZE_CHOICES = ("1024x1024", "1536x1024", "1024x1536", "auto")
+UPSCALE_TARGET_LONG_EDGE = 3840
 BOXLIB_NO_ICON_MODE_KEY = "no_icon_mode"
 
 # SAM3 API config
@@ -154,10 +181,12 @@ def call_llm_text(
     Returns:
         LLM 响应文本
     """
-    if provider == "bianxie":
+    if provider in ("bianxie", "custom"):
         return _call_bianxie_text(prompt, api_key, model, base_url, max_tokens, temperature)
     if provider == "gemini":
         return _call_gemini_text(prompt, api_key, model, max_tokens, temperature)
+    if provider == "openai_response":
+        return _call_openai_response_text(prompt, api_key, model, base_url, max_tokens, temperature)
     return _call_openrouter_text(prompt, api_key, model, base_url, max_tokens, temperature)
 
 
@@ -185,10 +214,14 @@ def call_llm_multimodal(
     Returns:
         LLM 响应文本
     """
-    if provider == "bianxie":
+    if provider in ("bianxie", "custom"):
         return _call_bianxie_multimodal(contents, api_key, model, base_url, max_tokens, temperature)
     if provider == "gemini":
         return _call_gemini_multimodal(contents, api_key, model, max_tokens, temperature)
+    if provider == "openai_response":
+        return _call_openai_response_multimodal(
+            contents, api_key, model, base_url, max_tokens, temperature
+        )
     return _call_openrouter_multimodal(contents, api_key, model, base_url, max_tokens, temperature)
 
 
@@ -197,7 +230,7 @@ def call_llm_image_generation(
     api_key: str,
     model: str,
     base_url: str,
-    provider: ProviderType,
+    provider: ImageProviderType,
     reference_image: Optional[Image.Image] = None,
     image_size: str = GEMINI_DEFAULT_IMAGE_SIZE,
 ) -> Optional[Image.Image]:
@@ -214,13 +247,22 @@ def call_llm_image_generation(
     Returns:
         生成的 PIL Image，失败返回 None
     """
-    if provider == "bianxie":
+    if provider in ("bianxie", "custom"):
         return _call_bianxie_image_generation(prompt, api_key, model, base_url, reference_image)
     if provider == "gemini":
         return _call_gemini_image_generation(
             prompt=prompt,
             api_key=api_key,
             model=model,
+            reference_image=reference_image,
+            image_size=image_size,
+        )
+    if provider == "openai":
+        return _call_openai_image_generation(
+            prompt=prompt,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
             reference_image=reference_image,
             image_size=image_size,
         )
@@ -345,6 +387,191 @@ def _call_bianxie_image_generation(
         return None
     except Exception as e:
         print(f"[Bianxie] 图像生成 API 调用失败: {e}")
+        raise
+
+
+def _pil_image_to_data_uri(image: Image.Image) -> str:
+    """Convert a PIL image to a PNG data URI."""
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    image_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    return f"data:image/png;base64,{image_b64}"
+
+
+def _extract_openai_response_text(response: Any) -> Optional[str]:
+    """Extract plain text from a Responses API response."""
+    text = getattr(response, "output_text", None)
+    if isinstance(text, str) and text.strip():
+        return text
+
+    extracted: list[str] = []
+    for item in getattr(response, "output", None) or []:
+        if getattr(item, "type", None) != "message":
+            continue
+        for content in getattr(item, "content", None) or []:
+            if getattr(content, "type", None) != "output_text":
+                continue
+            content_text = getattr(content, "text", None)
+            if isinstance(content_text, str) and content_text.strip():
+                extracted.append(content_text)
+
+    if extracted:
+        return "".join(extracted)
+    return None
+
+
+def _build_openai_response_input(contents: List[Any]) -> List[Dict[str, Any]]:
+    """Build a Responses API input payload from text and PIL images."""
+    message_content: List[Dict[str, Any]] = []
+    for part in contents:
+        if isinstance(part, str):
+            message_content.append({"type": "input_text", "text": part})
+        elif isinstance(part, Image.Image):
+            message_content.append(
+                {
+                    "type": "input_image",
+                    "image_url": _pil_image_to_data_uri(part),
+                    "detail": "high",
+                }
+            )
+
+    return [{"role": "user", "content": message_content}]
+
+
+def _call_openai_response_text(
+    prompt: str,
+    api_key: str,
+    model: str,
+    base_url: str,
+    max_tokens: int = 16000,
+    temperature: float = 0.7,
+) -> Optional[str]:
+    """Use the OpenAI Responses API for text generation."""
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(base_url=base_url, api_key=api_key, timeout=300)
+        response = client.responses.create(
+            model=model,
+            input=[{"role": "user", "content": [{"type": "input_text", "text": prompt}]}],
+            max_output_tokens=max_tokens,
+            temperature=temperature,
+        )
+        return _extract_openai_response_text(response)
+    except Exception as e:
+        print(f"[OpenAI Responses] 文本 API 调用失败: {e}")
+        raise
+
+
+def _call_openai_response_multimodal(
+    contents: List[Any],
+    api_key: str,
+    model: str,
+    base_url: str,
+    max_tokens: int = 16000,
+    temperature: float = 0.7,
+) -> Optional[str]:
+    """Use the OpenAI Responses API for multimodal generation."""
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(base_url=base_url, api_key=api_key, timeout=300)
+        response = client.responses.create(
+            model=model,
+            input=_build_openai_response_input(contents),
+            max_output_tokens=max_tokens,
+            temperature=temperature,
+        )
+        return _extract_openai_response_text(response)
+    except Exception as e:
+        print(f"[OpenAI Responses] 多模态 API 调用失败: {e}")
+        raise
+
+
+def _resolve_openai_image_size(
+    image_size: Optional[str],
+    reference_image: Optional[Image.Image] = None,
+) -> str:
+    """将项目现有的生图尺寸提示映射到 OpenAI Images API 的 size 参数。"""
+    if image_size in OPENAI_IMAGE_SIZE_CHOICES:
+        return image_size
+
+    if image_size == "1K":
+        return "1024x1024"
+    if image_size == "2K":
+        return "1536x1024"
+
+    if reference_image is not None:
+        width, height = reference_image.size
+        if width >= height * 1.15:
+            return "1536x1024"
+        if height >= width * 1.15:
+            return "1024x1536"
+        return "1024x1024"
+
+    return OPENAI_DEFAULT_IMAGE_SIZE
+
+
+def _extract_openai_image_response(response: Any) -> Optional[Image.Image]:
+    """从 OpenAI Images API 响应中提取图片。"""
+    data = getattr(response, "data", None) or []
+    for item in data:
+        image_b64 = getattr(item, "b64_json", None)
+        if isinstance(image_b64, str) and image_b64.strip():
+            image_data = base64.b64decode(image_b64)
+            image = Image.open(io.BytesIO(image_data))
+            image.load()
+            return image
+
+        image_url = getattr(item, "url", None)
+        if isinstance(image_url, str) and image_url.strip():
+            resp = requests.get(image_url, timeout=120)
+            resp.raise_for_status()
+            image = Image.open(io.BytesIO(resp.content))
+            image.load()
+            return image
+    return None
+
+
+def _call_openai_image_generation(
+    prompt: str,
+    api_key: str,
+    model: str,
+    base_url: str,
+    reference_image: Optional[Image.Image] = None,
+    image_size: str = GEMINI_DEFAULT_IMAGE_SIZE,
+) -> Optional[Image.Image]:
+    """使用 OpenAI Images API 调用 GPT-Image 生图 / 参考图编辑。"""
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(base_url=base_url, api_key=api_key, timeout=300)
+        resolved_size = _resolve_openai_image_size(image_size, reference_image)
+
+        if reference_image is None:
+            response = client.images.generate(
+                model=model,
+                prompt=prompt,
+                size=resolved_size,
+                quality="high",
+                output_format="png",
+            )
+        else:
+            buf = io.BytesIO()
+            reference_image.convert("RGBA").save(buf, format="PNG")
+            image_file = ("reference.png", buf.getvalue(), "image/png")
+            response = client.images.edit(
+                model=model,
+                image=image_file,
+                prompt=prompt,
+                size=resolved_size,
+                quality="high",
+                output_format="png",
+            )
+
+        return _extract_openai_image_response(response)
+    except Exception as e:
+        print(f"[OpenAI] 图像生成 API 调用失败: {e}")
         raise
 
 
@@ -945,16 +1172,84 @@ def _call_gemini_image_generation(
 # 步骤一：调用 LLM 生成图片
 # ============================================================================
 
+def _get_lanczos_resample() -> int:
+    """Get a Pillow LANCZOS resampling constant across versions."""
+    if hasattr(Image, "Resampling"):
+        return Image.Resampling.LANCZOS
+    return Image.LANCZOS
+
+
+def _upscale_image_to_4k_if_needed(
+    image: Image.Image,
+    target_long_edge: int = UPSCALE_TARGET_LONG_EDGE,
+) -> tuple[Image.Image, bool]:
+    """Upscale an image so its long edge reaches 4K while preserving aspect ratio."""
+    width, height = image.size
+    long_edge = max(width, height)
+    if long_edge <= 0 or long_edge >= target_long_edge:
+        return image, False
+
+    scale = target_long_edge / float(long_edge)
+    new_width = max(1, int(round(width * scale)))
+    new_height = max(1, int(round(height * scale)))
+    upscaled = image.resize((new_width, new_height), resample=_get_lanczos_resample())
+    return upscaled, True
+
+
+def _save_image_as_png(image: Image.Image, output_path: Path) -> None:
+    """Persist a PIL image as PNG, normalizing SDK-specific image wrappers if needed."""
+    try:
+        image.save(str(output_path), format="PNG")
+    except TypeError:
+        image.save(str(output_path))
+        with Image.open(str(output_path)) as normalized:
+            normalized.save(str(output_path), format="PNG")
+
+
+def prepare_imported_figure(
+    input_figure_path: str,
+    output_path: str,
+    enable_upscale: bool = True,
+) -> str:
+    """Normalize an imported stage-1 figure and copy it into the run output directory."""
+    print("=" * 60)
+    print("步骤一：跳过生图，使用已有的第一阶段图片")
+    print("=" * 60)
+    print(f"输入图片: {input_figure_path}")
+    print(f"4K等比例放大: {'开启' if enable_upscale else '关闭'}")
+
+    output_path_obj = Path(output_path)
+    output_path_obj.parent.mkdir(parents=True, exist_ok=True)
+
+    with Image.open(input_figure_path) as imported:
+        img = ImageOps.exif_transpose(imported).copy()
+
+    original_size = img.size
+    if enable_upscale:
+        img, upscaled = _upscale_image_to_4k_if_needed(img)
+        if upscaled:
+            print(
+                "导入图片已等比例放大到 4K 长边: "
+                f"{original_size[0]} x {original_size[1]} -> {img.size[0]} x {img.size[1]}"
+            )
+        else:
+            print(f"导入图片长边已达到 4K，无需放大: {original_size[0]} x {original_size[1]}")
+
+    _save_image_as_png(img, output_path_obj)
+    print(f"图片已保存: {output_path_obj}")
+    return str(output_path_obj)
+
 def generate_figure_from_method(
     method_text: str,
     output_path: str,
     api_key: str,
     model: str,
     base_url: str,
-    provider: ProviderType,
+    provider: ImageProviderType,
     use_reference_image: Optional[bool] = None,
     reference_image_path: Optional[str] = None,
     image_size: str = GEMINI_DEFAULT_IMAGE_SIZE,
+    enable_upscale: bool = True,
 ) -> str:
     """
     使用 LLM 生成学术风格图片
@@ -977,8 +1272,7 @@ def generate_figure_from_method(
     print("=" * 60)
     print(f"Provider: {provider}")
     print(f"模型: {model}")
-    if provider == "gemini":
-        print(f"分辨率: {image_size}")
+    print(f"4K等比例放大: {'开启' if enable_upscale else '关闭'}")
 
     if use_reference_image is None:
         use_reference_image = USE_REFERENCE_IMAGE
@@ -993,6 +1287,11 @@ def generate_figure_from_method(
             raise ValueError("启用参考图模式但未提供 reference_image_path")
         reference_image = Image.open(reference_image_path)
         print(f"参考图片: {reference_image_path}")
+
+    if provider == "gemini":
+        print(f"分辨率: {image_size}")
+    elif provider == "openai":
+        print(f"图像尺寸: {_resolve_openai_image_size(image_size, reference_image)}")
 
     if use_reference_image:
         prompt = f"""Generate a figure to visualize the method described below.
@@ -1040,18 +1339,23 @@ The figure should be engaging and using academic journal style with cute charact
     if img is None:
         raise Exception('API 响应中没有找到图片')
 
+    original_size = img.size
+    if enable_upscale:
+        img, upscaled = _upscale_image_to_4k_if_needed(img)
+        if upscaled:
+            print(
+                "图片已等比例放大到 4K 长边: "
+                f"{original_size[0]} x {original_size[1]} -> {img.size[0]} x {img.size[1]}"
+            )
+        else:
+            print(f"图片长边已达到 4K，无需放大: {original_size[0]} x {original_size[1]}")
+
     # 确保输出目录存在
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 转换为 PNG 保存（Gemini 返回的图片对象 save() 可能不接受 format 参数）
-    try:
-        img.save(str(output_path), format='PNG')
-    except TypeError:
-        img.save(str(output_path))
-        # 某些 SDK 对象会按自身默认编码写盘（如 JPEG），这里强制转存为真实 PNG
-        with Image.open(str(output_path)) as normalized:
-            normalized.save(str(output_path), format='PNG')
+    # 转换为 PNG 保存（某些 SDK 图像对象不接受 format 参数）
+    _save_image_as_png(img, output_path)
     print(f"图片已保存: {output_path}")
     return str(output_path)
 
@@ -2836,11 +3140,14 @@ Please carefully compare and check the following **TWO MAJOR ASPECTS with EIGHT 
 # ============================================================================
 
 def method_to_svg(
-    method_text: str,
+    method_text: Optional[str] = None,
     output_dir: str = "./output",
     api_key: str = None,
     base_url: str = None,
     provider: ProviderType = "bianxie",
+    image_provider: Optional[ImageProviderType] = None,
+    image_api_key: Optional[str] = None,
+    image_base_url: Optional[str] = None,
     image_gen_model: str = None,
     svg_gen_model: str = None,
     sam_prompts: str = "icon",
@@ -2854,6 +3161,8 @@ def method_to_svg(
     optimize_iterations: int = 2,
     merge_threshold: float = 0.9,
     image_size: str = GEMINI_DEFAULT_IMAGE_SIZE,
+    enable_upscale: bool = True,
+    input_figure_path: Optional[str] = None,
 ) -> dict:
     """
     完整流程：Paper Method → SVG with Icons
@@ -2864,6 +3173,7 @@ def method_to_svg(
         api_key: API Key
         base_url: API base URL
         provider: API 提供商
+        input_figure_path: 直接导入已有的步骤一图片路径（可跳过生图）
         image_gen_model: 生图模型
         svg_gen_model: SVG 生成模型
         sam_prompts: SAM3 文本提示，支持逗号分隔的多个prompt（如 "icon,diagram,arrow"）
@@ -2879,21 +3189,42 @@ def method_to_svg(
             - "label": 灰色填充+黑色边框+序号标签（推荐）
         optimize_iterations: 步骤 4.6 优化迭代次数（0 表示跳过优化）
         merge_threshold: Box合并阈值，重叠比例超过此值则合并（0表示不合并，默认0.9）
+        enable_upscale: 是否在步骤一后自动等比例放大到 4K 长边
 
     Returns:
         结果字典
     """
-    if not api_key:
-        raise ValueError("必须提供 api_key")
-
     # 获取默认配置
     config = PROVIDER_CONFIGS[provider]
+    if image_provider is None:
+        image_provider = "openai" if provider == "openai_response" else provider
+    image_config = IMAGE_PROVIDER_CONFIGS[image_provider]
+
     if base_url is None:
         base_url = config["base_url"]
+    if image_base_url is None and provider == "openai_response" and image_provider == "openai":
+        image_base_url = base_url
+    if image_base_url is None and image_provider == provider and base_url is not None:
+        image_base_url = base_url
+    if image_base_url is None:
+        image_base_url = image_config["base_url"]
+    if image_api_key is None and provider == "openai_response" and image_provider == "openai":
+        image_api_key = api_key
+    if image_api_key is None and image_provider == "openai":
+        image_api_key = os.environ.get("OPENAI_API_KEY")
+    if image_api_key is None:
+        image_api_key = api_key
     if image_gen_model is None:
-        image_gen_model = config["default_image_model"]
+        image_gen_model = image_config["default_image_model"]
     if svg_gen_model is None:
         svg_gen_model = config["default_svg_model"]
+
+    if input_figure_path is None and not image_api_key:
+        raise ValueError("必须提供 image_api_key（或复用 api_key）用于步骤一生图")
+    if stop_after >= 4 and not api_key:
+        raise ValueError("步骤 4/5 需要提供 api_key")
+    if input_figure_path is None and not method_text:
+        raise ValueError("未提供 method_text，且未指定 input_figure_path")
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -2903,7 +3234,12 @@ def method_to_svg(
     print("=" * 60)
     print(f"Provider: {provider}")
     print(f"输出目录: {output_dir}")
-    print(f"生图模型: {image_gen_model}")
+    if input_figure_path:
+        print("输入模式: imported_figure")
+        print(f"导入图片: {input_figure_path}")
+    else:
+        print(f"Image Provider: {image_provider}")
+        print(f"生图模型: {image_gen_model}")
     print(f"SVG模型: {svg_gen_model}")
     print(f"SAM提示词: {sam_prompts}")
     print(f"最低置信度: {min_score}")
@@ -2915,21 +3251,33 @@ def method_to_svg(
     print(f"占位符模式: {placeholder_mode}")
     print(f"优化迭代次数: {optimize_iterations}")
     print(f"Box合并阈值: {merge_threshold}")
-    if provider == "gemini":
-        print(f"生图分辨率: {image_size}")
+    print(f"4K等比例放大: {'开启' if enable_upscale else '关闭'}")
+    if not input_figure_path:
+        if image_provider == "gemini":
+            print(f"生图分辨率: {image_size}")
+        elif image_provider == "openai":
+            print(f"生图尺寸: {_resolve_openai_image_size(image_size)}")
     print("=" * 60)
 
     # 步骤一：生成图片
     figure_path = output_dir / "figure.png"
-    generate_figure_from_method(
-        method_text=method_text,
-        output_path=str(figure_path),
-        api_key=api_key,
-        model=image_gen_model,
-        base_url=base_url,
-        provider=provider,
-        image_size=image_size,
-    )
+    if input_figure_path:
+        prepare_imported_figure(
+            input_figure_path=input_figure_path,
+            output_path=str(figure_path),
+            enable_upscale=enable_upscale,
+        )
+    else:
+        generate_figure_from_method(
+            method_text=method_text,
+            output_path=str(figure_path),
+            api_key=image_api_key,
+            model=image_gen_model,
+            base_url=image_base_url,
+            provider=image_provider,
+            image_size=image_size,
+            enable_upscale=enable_upscale,
+        )
 
     if stop_after == 1:
         print("\n" + "=" * 60)
@@ -3172,7 +3520,8 @@ if __name__ == "__main__":
     # 输入参数
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument("--method_text", help="Paper method 文本内容")
-    input_group.add_argument("--method_file", default="./paper.txt", help="包含 paper method 的文本文件路径")
+    input_group.add_argument("--method_file", default=None, help="包含 paper method 的文本文件路径")
+    input_group.add_argument("--input_figure_path", default=None, help="直接导入已有的步骤一图片，跳过生图")
 
     # 输出参数
     parser.add_argument("--output_dir", default="./output", help="输出目录（默认: ./output）")
@@ -3180,17 +3529,29 @@ if __name__ == "__main__":
     # Provider 参数
     parser.add_argument(
         "--provider",
-        choices=["openrouter", "bianxie", "gemini"],
-        default="bianxie",
-        help="API 提供商（默认: bianxie）"
+        choices=["openrouter", "custom", "bianxie", "gemini", "openai_response"],
+        default="custom",
+        help="API 提供商（默认: custom）"
+    )
+    parser.add_argument(
+        "--image_provider",
+        choices=["openrouter", "custom", "bianxie", "gemini", "openai"],
+        default=None,
+        help="步骤一生图 provider（默认跟随 --provider；若 provider=openai_response 则默认 openai）",
     )
 
     # API 参数
     parser.add_argument("--api_key", default=None, help="API Key")
     parser.add_argument("--base_url", default=None, help="API base URL（默认根据 provider 自动设置）")
+    parser.add_argument("--image_api_key", default=None, help="步骤一生图 API Key（默认跟随 --api_key）")
+    parser.add_argument(
+        "--image_base_url",
+        default=None,
+        help="步骤一生图 API base URL（默认根据 image_provider 自动设置）",
+    )
 
     # 模型参数
-    parser.add_argument("--image_model", default=None, help="生图模型（默认根据 provider 自动设置）")
+    parser.add_argument("--image_model", default=None, help="生图模型（默认根据 image_provider 自动设置）")
     parser.add_argument(
         "--image_size",
         choices=list(IMAGE_SIZE_CHOICES),
@@ -3198,6 +3559,11 @@ if __name__ == "__main__":
         help="生图分辨率（可选: 1K/2K/4K，默认: 4K）",
     )
     parser.add_argument("--svg_model", default=None, help="SVG生成模型（默认根据 provider 自动设置）")
+    parser.add_argument(
+        "--disable_auto_upscale",
+        action="store_true",
+        help="禁用步骤一后默认开启的 4K 等比例放大",
+    )
 
     # Step 1 参考图片参数
     parser.add_argument(
@@ -3262,10 +3628,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.use_reference_image and args.input_figure_path:
+        parser.error("--use_reference_image 不能与 --input_figure_path 同时使用")
+    if args.reference_image_path and args.input_figure_path:
+        parser.error("--reference_image_path 不能与 --input_figure_path 同时使用")
     if args.use_reference_image and not args.reference_image_path:
         parser.error("--use_reference_image 需要 --reference_image_path")
     if args.reference_image_path and not Path(args.reference_image_path).is_file():
         parser.error(f"参考图片不存在: {args.reference_image_path}")
+    if args.input_figure_path and not Path(args.input_figure_path).is_file():
+        parser.error(f"导入图片不存在: {args.input_figure_path}")
 
     USE_REFERENCE_IMAGE = bool(args.use_reference_image)
     REFERENCE_IMAGE_PATH = args.reference_image_path
@@ -3274,7 +3646,7 @@ if __name__ == "__main__":
 
     # 获取 method 文本：优先使用 --method_text
     method_text = args.method_text
-    if method_text is None:
+    if method_text is None and args.method_file is not None:
         with open(args.method_file, 'r', encoding='utf-8') as f:
             method_text = f.read()
 
@@ -3285,9 +3657,13 @@ if __name__ == "__main__":
         api_key=args.api_key,
         base_url=args.base_url,
         provider=args.provider,
+        image_provider=args.image_provider,
+        image_api_key=args.image_api_key,
+        image_base_url=args.image_base_url,
         image_gen_model=args.image_model,
         image_size=args.image_size,
         svg_gen_model=args.svg_model,
+        enable_upscale=not args.disable_auto_upscale,
         sam_prompts=args.sam_prompt,
         min_score=args.min_score,
         sam_backend=args.sam_backend,
@@ -3298,4 +3674,5 @@ if __name__ == "__main__":
         placeholder_mode=args.placeholder_mode,
         optimize_iterations=args.optimize_iterations,
         merge_threshold=args.merge_threshold,
+        input_figure_path=args.input_figure_path,
     )

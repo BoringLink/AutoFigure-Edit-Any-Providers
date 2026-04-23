@@ -11,15 +11,22 @@
     <div class="canvas-page">
       <header class="topbar">
         <div>
-          <div class="brand">AutoFigure-Edit Canvas</div>
+          <div class="brand">
+            <img class="brand-logo" src="/favicon.svg" alt="DeepScientist logo" />
+            <span id="canvasBrandTitle">AutoFigure-Edit Canvas</span>
+          </div>
           <div class="subtitle">
-            Status: <span id="statusText">Waiting</span>
+            <span id="canvasStatusLabel">Status:</span> <span id="statusText">Waiting</span>
           </div>
         </div>
         <div class="topbar-actions">
           <button class="ghost" id="backToConfigBtn">Back to Config</button>
           <button class="ghost" id="logToggle">Logs</button>
-          <div class="job-pill">Job <span id="jobId"></span></div>
+          <div class="lang-switch" data-lang-switch>
+            <button type="button" class="lang-chip" data-lang="zh">中文</button>
+            <button type="button" class="lang-chip" data-lang="en">EN</button>
+          </div>
+          <div class="job-pill"><span id="canvasJobLabel">Job</span> <span id="jobId"></span></div>
         </div>
       </header>
 
@@ -31,8 +38,8 @@
             title="SVG-Edit Canvas"
           ></iframe>
           <div id="svgFallback" class="svg-fallback">
-            <div class="fallback-title">SVG-Edit not installed</div>
-            <div class="fallback-body">
+            <div class="fallback-title" id="fallbackTitle">SVG-Edit not installed</div>
+            <div class="fallback-body" id="fallbackBody">
               Drop an SVG-Edit build into <code>web/vendor/svg-edit/</code> (editor/index.html) to enable editing.
             </div>
             <object id="fallbackObject" type="image/svg+xml" class="fallback-object"></object>
@@ -50,12 +57,12 @@
       </button>
 
       <aside class="artifact-panel" id="artifactPanel">
-        <div class="panel-header">Artifacts</div>
+        <div class="panel-header" id="artifactPanelTitle">Artifacts</div>
         <div class="artifact-list" id="artifactList"></div>
       </aside>
 
       <aside class="log-panel" id="logPanel">
-        <div class="panel-header">Logs</div>
+        <div class="panel-header" id="logPanelTitle">Logs</div>
         <div class="log-body" id="logBody"></div>
       </aside>
     </div>

@@ -40,10 +40,23 @@ https://github.com/user-attachments/assets/6f93deb4-9854-4f1e-8097-53b0c3378a0d
 
 ## 🔥 News
 
+- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** is now available. This update adds `custom` OpenAI-compatible provider support, OpenAI Responses + `gpt-image-2` routing improvements, stage-1 figure import mode, a bilingual configuration UI, and an in-product configuration guide.
 - **[2026.03.24]** 🧠 Our sister project **DeepScientist v1.5** is now officially released. It is a local-first open-source autonomous research system for end-to-end scientific discovery. Explore it on [GitHub](https://github.com/ResearAI/DeepScientist) or read the [ICLR 2026 paper](https://openreview.net/forum?id=cZFgsLq8Gs).
 - **[2026.03.11]** 📄 Our **AutoFigure-Edit** paper is now available on [arXiv](https://arxiv.org/abs/2603.06674) and featured in 🤗[Hugging Face Daily Papers](https://huggingface.co/papers/2603.06674)! If you find our work helpful, please consider giving us an **upvote** on Hugging Face and **citing** our paper. Thank you! ❤️
 - **[2026.02.17]** 🚀 The **AutoFigure-Edit online platform** is now live! It is free for all scholars to use. Try it out at [deepscientist.cc](https://deepscientist.cc).
 - **[2026.01.26]** 🎉 AutoFigure has been accepted to **ICLR 2026**! You can read the paper on [arXiv](https://arxiv.org/abs/2602.03828).
+
+---
+
+## 🆕 V1.1 (2026.04.23)
+
+AutoFigure-Edit v1.1 focuses on making the web workflow more practical for real users and real OpenAI-compatible gateways.
+
+- **OpenAI Responses main-route fix:** When you use `--provider openai_response` with a custom OpenAI-compatible `base_url`, step 1 now inherits the same image API route and key by default instead of falling back to the official OpenAI host.
+- **`custom` provider support:** The CLI and web UI now expose `custom` as the primary OpenAI-compatible provider name, while `bianxie` remains as a backward-compatible alias.
+- **Stage-1 figure import mode:** You can now skip image generation entirely by importing an existing academic raster figure and continuing directly from SAM + SVG reconstruction.
+- **Bilingual web configuration:** The main page, import page, canvas, and configuration guide now support in-page Chinese / English switching.
+- **In-product configuration guide:** A dedicated guide page explains workflows, fields, SAM backends, and recommended presets.
 
 ---
 
@@ -214,8 +227,11 @@ docker compose down
 - Default SAM prompt: `icon,person,robot,animal`
 - Current default models:
   - `openrouter`: image `google/gemini-3.1-flash-image-preview`, svg `google/gemini-3.1-pro-preview`
-  - `bianxie`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
+  - `custom` / `bianxie`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
   - `gemini`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
+  - `openai_response`: image `gpt-image-2` (step 1 fallback), svg `gpt-5.4` via Responses API
+- Optional step-1 override:
+  - `--image_provider openai`: image `gpt-image-2` via the official OpenAI Images API
 
 #### 6) Common Docker networking issues
 
@@ -243,8 +259,42 @@ pip install -e .
 python autofigure2.py \
   --method_file paper.txt \
   --output_dir outputs/demo \
-  --provider bianxie \
+  --provider custom \
   --api_key YOUR_KEY
+```
+
+Use OpenAI only for step 1 image generation while keeping SVG reconstruction on the original provider:
+
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider gemini \
+  --api_key GEMINI_KEY \
+  --image_provider openai \
+  --image_api_key OPENAI_KEY \
+  --image_model gpt-image-2
+```
+
+Use the OpenAI Responses API for text + multimodal SVG reconstruction:
+
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider openai_response \
+  --api_key OPENAI_KEY
+```
+
+Continue from an existing stage-1 figure and skip image generation:
+
+```bash
+python autofigure2.py \
+  --input_figure_path ./my_stage1_figure.png \
+  --output_dir outputs/import_demo \
+  --provider openai_response \
+  --api_key OPENAI_KEY \
+  --svg_model gpt-5.4
 ```
 
 ### Option 2: Web Interface
@@ -265,11 +315,17 @@ AutoFigure-edit provides a visual web interface designed for seamless generation
 <img src="img/demo_start.png" width="100%" alt="Configuration Page" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
 
 On the start page, paste your paper's method text on the left. On the right, configure your generation settings:
-*   **Provider:** Select your LLM provider (OpenRouter, Bianxie, or Gemini).
+*   **Provider:** Select your LLM provider (OpenRouter, Custom, Gemini, or OpenAI Responses).
+*   **Image Provider:** Optionally override **step 1 only** to use OpenAI GPT-Image.
 *   **Optimize:** Set SVG template refinement iterations (recommend `0` for standard use).
-*   **Image Size:** Available only in **Gemini** mode. Choose `1K`, `2K`, or `4K` for image generation.
+*   **Image Size:** Available when the effective step-1 image provider is **Gemini**. Choose `1K`, `2K`, or `4K`.
+*   **Auto Upscale:** Enabled by default. Upscales `figure.png` to a 4K long edge (`3840px`) while preserving aspect ratio.
 *   **Reference Image:** Upload a target image to enable style transfer.
 *   **SAM3 Backend:** Choose local SAM3 or the fal.ai API (API key optional).
+
+If you already have the first-stage raster figure, use the black button in the top-right corner:
+
+*   **I already have the stage-1 figure:** Opens a dedicated import page where you upload an existing academic figure and continue directly from SAM + SVG reconstruction.
 
 ### 2. Canvas & Editor
 <img src="img/demo_canvas.png" width="100%" alt="Canvas Page" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
@@ -331,14 +387,19 @@ Optional CLI flags (API):
 | Provider | Base URL | Notes |
 |----------|----------|------|
 | **OpenRouter** | `openrouter.ai/api/v1` | Supports Gemini/Claude/others |
-| **Bianxie** | `api.bianxie.ai/v1` | OpenAI-compatible API |
+| **Custom** | `api.bianxie.ai/v1` (default) | OpenAI-compatible API; `bianxie` remains a backward-compatible alias |
 | **Gemini (Google)** | `generativelanguage.googleapis.com/v1beta` | Official Google Gemini API (`google-genai`) |
+| **OpenAI Responses** | `api.openai.com/v1` | Uses the official OpenAI Responses API for text + multimodal |
 
 Common CLI flags:
 
-- `--provider` (openrouter | bianxie | gemini)
+- `--method_text`, `--method_file`, or `--input_figure_path`
+- `--provider` (openrouter | custom | bianxie | gemini | openai_response)
+- `--image_provider` (openrouter | custom | bianxie | gemini | openai, optional step-1 override)
+- `--image_api_key`, `--image_base_url`
 - `--image_model`, `--svg_model`
 - `--image_size` (1K | 2K | 4K, Gemini only)
+- `--disable_auto_upscale` (disable the default 4K aspect-ratio-preserving upscale after step 1)
 - `--sam_prompt` (comma-separated prompts)
 - `--sam_backend` (local | fal | roboflow | api)
 - `--sam_api_key` (API key override; falls back to `FAL_KEY` or `ROBOFLOW_API_KEY`)
@@ -351,12 +412,44 @@ Common CLI flags:
 
 If you want to use a self-hosted or third-party OpenAI-compatible endpoint, use:
 
-- `--provider openrouter`
+- `--provider custom`
 - `--base_url <your_endpoint>`
 - `--image_model <image_model_id>`
 - `--svg_model <svg_model_id>`
 
 This is the same pattern used for custom compatible providers: the system sends standard OpenAI-style requests to your `base_url`. Make sure the endpoint supports both image generation and multimodal SVG reconstruction before running a full job.
+
+### OpenAI GPT-Image for Step 1
+
+As of April 23, 2026, OpenAI's official Images API supports `images.generate` and `images.edit` for GPT-Image models. In this repo, `--image_provider openai` uses the OpenAI Images API for step 1 only:
+
+- no reference image: `images.generate`
+- with reference image: `images.edit`
+- default model: `gpt-image-2` (override with `--image_model`)
+- API key precedence: `--image_api_key` -> `OPENAI_API_KEY` -> `--api_key`
+
+### Default 4K Upscale
+
+After step 1, the generated `figure.png` is upscaled by default so its long edge reaches `3840px` while preserving the original aspect ratio. If the generated image is already at or above a 4K long edge, the upscale step is skipped automatically.
+
+Disable it with:
+
+```bash
+--disable_auto_upscale
+```
+
+### OpenAI Responses Provider
+
+As of April 23, 2026, OpenAI's official Responses API supports text output plus multimodal input with `input_text` and `input_image`. In this repo, `--provider openai_response` means:
+
+- text calls use `client.responses.create(...)`
+- multimodal SVG reconstruction also uses `client.responses.create(...)`
+- step 1 image generation falls back to the official OpenAI Images API unless `--image_provider` is explicitly set
+- default SVG model: `gpt-5.4` (override with `--svg_model`)
+
+### Importing an Existing Stage-1 Figure
+
+If you already have the academic raster figure from step 1, use `--input_figure_path` to skip image generation entirely. The pipeline will normalize the imported image into `figure.png`, optionally apply the default 4K aspect-ratio-preserving upscale, and then continue from SAM segmentation and SVG reconstruction.
 
 ---
 

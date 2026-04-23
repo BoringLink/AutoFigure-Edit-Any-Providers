@@ -41,7 +41,7 @@ SVG_EDIT_CANDIDATES = [
     ("vendor/svg-edit/index.html", WEB_DIR / "vendor" / "svg-edit" / "index.html"),
 ]
 
-SENSITIVE_CMD_FLAGS = {"--api_key", "--sam_api_key"}
+SENSITIVE_CMD_FLAGS = {"--api_key", "--image_api_key", "--sam_api_key"}
 
 
 def _resolve_svg_edit_path() -> tuple[bool, str | None]:
@@ -86,12 +86,16 @@ class Job:
 
 
 class RunRequest(BaseModel):
-    method_text: str = Field(..., min_length=1)
-    provider: str = "bianxie"
+    method_text: Optional[str] = None
+    provider: str = "custom"
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+    image_provider: Optional[str] = None
+    image_api_key: Optional[str] = None
+    image_base_url: Optional[str] = None
     image_model: Optional[str] = None
     image_size: Optional[str] = None
+    enable_upscale: Optional[bool] = None
     svg_model: Optional[str] = None
     sam_prompt: Optional[str] = None
     sam_backend: Optional[str] = None
@@ -101,6 +105,7 @@ class RunRequest(BaseModel):
     merge_threshold: Optional[float] = None
     optimize_iterations: Optional[int] = None
     reference_image_path: Optional[str] = None
+    input_figure_path: Optional[str] = None
 
 
 app = FastAPI()
@@ -121,6 +126,14 @@ def get_config() -> JSONResponse:
 
 @app.post("/api/run")
 def run_job(req: RunRequest) -> JSONResponse:
+    method_text = (req.method_text or "").strip()
+    input_figure_path = req.input_figure_path
+    if bool(method_text) == bool(input_figure_path):
+        raise HTTPException(
+            status_code=400,
+            detail="Provide exactly one of method_text or input_figure_path",
+        )
+
     job_id = datetime.now().strftime("%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:8]
     output_dir = OUTPUTS_DIR / job_id
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -128,22 +141,37 @@ def run_job(req: RunRequest) -> JSONResponse:
     cmd = [
         PYTHON_EXECUTABLE,
         str(BASE_DIR / "autofigure2.py"),
-        "--method_text",
-        req.method_text,
         "--output_dir",
         str(output_dir),
         "--provider",
         req.provider,
     ]
+    if method_text:
+        cmd += ["--method_text", method_text]
+    if input_figure_path:
+        resolved_input_path = (
+            str((BASE_DIR / input_figure_path).resolve())
+            if not Path(input_figure_path).is_absolute()
+            else input_figure_path
+        )
+        cmd += ["--input_figure_path", resolved_input_path]
 
     if req.api_key:
         cmd += ["--api_key", req.api_key]
     if req.base_url:
         cmd += ["--base_url", req.base_url]
+    if req.image_provider:
+        cmd += ["--image_provider", req.image_provider]
+    if req.image_api_key:
+        cmd += ["--image_api_key", req.image_api_key]
+    if req.image_base_url:
+        cmd += ["--image_base_url", req.image_base_url]
     if req.image_model:
         cmd += ["--image_model", req.image_model]
     if req.image_size:
         cmd += ["--image_size", req.image_size]
+    if req.enable_upscale is False:
+        cmd += ["--disable_auto_upscale"]
     if req.svg_model:
         cmd += ["--svg_model", req.svg_model]
 
