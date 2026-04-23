@@ -145,7 +145,7 @@
         presets_title: "Recommended Presets",
         preset1_title: "Preset 1: OpenAI Main Route",
         preset1_copy:
-          "SVG / Reasoning Provider: OpenAI Responses. Step 1 Image Provider: Same as SVG path. Image Model: gpt-image-2. SVG Model: gpt-5.4.",
+          "SVG / Reasoning Provider: OpenAI Responses. Step 1 Image Provider: Same as SVG path. Image Model: gpt-image-2. SVG Model: gpt-5.5.",
         preset2_title: "Preset 2: Gemini + OpenAI Images",
         preset2_copy:
           "SVG / Reasoning Provider: Gemini. Step 1 Image Provider: OpenAI Images. Image Model: gpt-image-2. Use this if you prefer Gemini SVG reconstruction but OpenAI image generation.",
@@ -220,7 +220,7 @@
           "Default is gpt-image-2 for OpenAI Images. You can manually replace it with any compatible image model id if needed.",
         field_svg_model_title: "SVG Model",
         field_svg_model_copy:
-          "Default follows the selected reasoning route. The default for OpenAI Responses is gpt-5.4, while Gemini/OpenRouter/Custom use the Gemini defaults unless you know you need a different id.",
+          "Default follows the selected reasoning route. The default for OpenAI Responses is gpt-5.5, while Gemini/OpenRouter/Custom use the Gemini defaults unless you know you need a different id.",
         field_upscale_title: "Auto Upscale",
         field_upscale_copy:
           "Enabled by default. It enlarges figure.png to a 4K long edge while preserving aspect ratio. Keep it on unless you specifically want the original resolution.",
@@ -249,7 +249,7 @@
         examples_title: "Common Filling Examples",
         example1_title: "I only want the easiest stable setup",
         example1_copy:
-          "Main page. Provider = OpenAI Responses. Image Provider = Same as SVG path. Image Model = gpt-image-2. SVG Model = gpt-5.4. Fill one API key.",
+          "Main page. Provider = OpenAI Responses. Image Provider = Same as SVG path. Image Model = gpt-image-2. SVG Model = gpt-5.5. Fill one API key.",
         example2_title: "I already have the stage-1 figure",
         example2_copy:
           "Import page. Upload the figure. Choose Provider = OpenAI Responses or Gemini. Fill SVG Model and API Key. Leave image settings alone because step 1 is skipped.",
@@ -421,7 +421,7 @@
         presets_title: "推荐填写方案",
         preset1_title: "方案 1：OpenAI 主路线",
         preset1_copy:
-          "SVG / 推理 Provider 选 OpenAI Responses，步骤 1 图片 Provider 保持与 SVG 路径一致，Image Model 用 gpt-image-2，SVG Model 用 gpt-5.4。",
+          "SVG / 推理 Provider 选 OpenAI Responses，步骤 1 图片 Provider 保持与 SVG 路径一致，Image Model 用 gpt-image-2，SVG Model 用 gpt-5.5。",
         preset2_title: "方案 2：Gemini + OpenAI Images",
         preset2_copy:
           "SVG / 推理 Provider 选 Gemini，步骤 1 图片 Provider 改成 OpenAI Images，Image Model 用 gpt-image-2。适合你想保留 Gemini 的 SVG 重建，但生图想走 OpenAI。",
@@ -496,7 +496,7 @@
           "OpenAI Images 默认推荐 gpt-image-2。如果你知道自己要换别的图片模型，也可以直接手填模型 id。",
         field_svg_model_title: "SVG 模型",
         field_svg_model_copy:
-          "默认会跟随当前推理路线。OpenAI Responses 默认是 gpt-5.4；Gemini/OpenRouter/Custom 默认沿用 Gemini 系列模型，除非你明确知道要改。",
+          "默认会跟随当前推理路线。OpenAI Responses 默认是 gpt-5.5；Gemini/OpenRouter/Custom 默认沿用 Gemini 系列模型，除非你明确知道要改。",
         field_upscale_title: "自动放大",
         field_upscale_copy:
           "默认开启，会把 figure.png 等比例放大到 4K 长边。除非你明确要保留原分辨率，否则建议保持开启。",
@@ -525,7 +525,7 @@
         examples_title: "常见填写示例",
         example1_title: "我只想要最稳最省事的配置",
         example1_copy:
-          "主页面。Provider 选 OpenAI Responses，Image Provider 保持与 SVG 路径一致，Image Model 用 gpt-image-2，SVG Model 用 gpt-5.4，只填一套 API Key。",
+          "主页面。Provider 选 OpenAI Responses，Image Provider 保持与 SVG 路径一致，Image Model 用 gpt-image-2，SVG Model 用 gpt-5.5，只填一套 API Key。",
         example2_title: "我已经有第一阶段图片了",
         example2_copy:
           "导入页面。上传图片后，Provider 选 OpenAI Responses 或 Gemini，填写 SVG Model 和 API Key 即可。图片相关设置不用再管，因为步骤 1 已经跳过。",
@@ -888,7 +888,7 @@
 
     function getDefaultSvgModel(provider) {
       if (provider === "openai_response") {
-        return "gpt-5.4";
+        return "gpt-5.5";
       }
       if (provider === "openrouter") {
         return "google/gemini-3.1-pro-preview";
@@ -1411,7 +1411,7 @@
     function getDefaultSvgModel(provider) {
       provider = normalizeProviderValue(provider);
       if (provider === "openai_response") {
-        return "gpt-5.4";
+        return "gpt-5.5";
       }
       if (provider === "openrouter") {
         return "google/gemini-3.1-pro-preview";

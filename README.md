@@ -40,7 +40,7 @@ https://github.com/user-attachments/assets/6f93deb4-9854-4f1e-8097-53b0c3378a0d
 
 ## 🔥 News
 
-- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** is now available. This update adds `custom` OpenAI-compatible provider support, OpenAI Responses + `gpt-image-2` routing improvements, stage-1 figure import mode, a bilingual configuration UI, and an in-product configuration guide.
+- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** is now available. This release primarily adds user-supplied stage-1 figure import, official OpenAI model support including `gpt-image-2` and `gpt-5.5`, `custom` OpenAI-compatible routing, and a bilingual configuration workflow. See the full [release notes](releases/v1.1.md).
 - **[2026.03.24]** 🧠 Our sister project **DeepScientist v1.5** is now officially released. It is a local-first open-source autonomous research system for end-to-end scientific discovery. Explore it on [GitHub](https://github.com/ResearAI/DeepScientist) or read the [ICLR 2026 paper](https://openreview.net/forum?id=cZFgsLq8Gs).
 - **[2026.03.11]** 📄 Our **AutoFigure-Edit** paper is now available on [arXiv](https://arxiv.org/abs/2603.06674) and featured in 🤗[Hugging Face Daily Papers](https://huggingface.co/papers/2603.06674)! If you find our work helpful, please consider giving us an **upvote** on Hugging Face and **citing** our paper. Thank you! ❤️
 - **[2026.02.17]** 🚀 The **AutoFigure-Edit online platform** is now live! It is free for all scholars to use. Try it out at [deepscientist.cc](https://deepscientist.cc).
@@ -50,13 +50,14 @@ https://github.com/user-attachments/assets/6f93deb4-9854-4f1e-8097-53b0c3378a0d
 
 ## 🆕 V1.1 (2026.04.23)
 
-AutoFigure-Edit v1.1 focuses on making the web workflow more practical for real users and real OpenAI-compatible gateways.
+AutoFigure-Edit v1.1 is published as tag `v1.1`. This release focuses on two practical workflows that were still awkward in earlier public builds: starting from a user-supplied stage-1 academic figure, and running the pipeline cleanly with official OpenAI models or OpenAI-compatible gateways.
 
-- **OpenAI Responses main-route fix:** When you use `--provider openai_response` with a custom OpenAI-compatible `base_url`, step 1 now inherits the same image API route and key by default instead of falling back to the official OpenAI host.
-- **`custom` provider support:** The CLI and web UI now expose `custom` as the primary OpenAI-compatible provider name, while `bianxie` remains as a backward-compatible alias.
-- **Stage-1 figure import mode:** You can now skip image generation entirely by importing an existing academic raster figure and continuing directly from SAM + SVG reconstruction.
-- **Bilingual web configuration:** The main page, import page, canvas, and configuration guide now support in-page Chinese / English switching.
-- **In-product configuration guide:** A dedicated guide page explains workflows, fields, SAM backends, and recommended presets.
+- **User-supplied stage-1 figure import:** You can now upload an existing academic raster figure, skip step 1 image generation, and continue directly from SAM + SVG reconstruction in both the web UI and CLI workflow.
+- **Official OpenAI model support:** Step 1 can now use the OpenAI Images API with `gpt-image-2`, while the OpenAI Responses path is documented and exposed for text plus multimodal SVG reconstruction with `gpt-5.5` as the default SVG model.
+- **`custom` OpenAI-compatible routing:** The CLI and web UI now expose `custom` as the primary compatible provider name, keep `bianxie` as a backward-compatible alias, and fix the `openai_response` route so step 1 can inherit the same compatible `base_url` and `api_key` by default.
+- **Bilingual setup and onboarding:** The main page, import page, canvas, and guide now support in-page Chinese / English switching, and the built-in guide explains workflow choices, fields, SAM backends, and recommended presets.
+
+Full release notes: [releases/v1.1.md](releases/v1.1.md)
 
 ---
 
@@ -229,7 +230,7 @@ docker compose down
   - `openrouter`: image `google/gemini-3.1-flash-image-preview`, svg `google/gemini-3.1-pro-preview`
   - `custom` / `bianxie`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
   - `gemini`: image `gemini-3.1-flash-image-preview`, svg `gemini-3.1-pro-preview`
-  - `openai_response`: image `gpt-image-2` (step 1 fallback), svg `gpt-5.4` via Responses API
+  - `openai_response`: image `gpt-image-2` (step 1 fallback), svg `gpt-5.5` via Responses API
 - Optional step-1 override:
   - `--image_provider openai`: image `gpt-image-2` via the official OpenAI Images API
 
@@ -294,7 +295,7 @@ python autofigure2.py \
   --output_dir outputs/import_demo \
   --provider openai_response \
   --api_key OPENAI_KEY \
-  --svg_model gpt-5.4
+  --svg_model gpt-5.5
 ```
 
 ### Option 2: Web Interface
@@ -445,7 +446,7 @@ As of April 23, 2026, OpenAI's official Responses API supports text output plus 
 - text calls use `client.responses.create(...)`
 - multimodal SVG reconstruction also uses `client.responses.create(...)`
 - step 1 image generation falls back to the official OpenAI Images API unless `--image_provider` is explicitly set
-- default SVG model: `gpt-5.4` (override with `--svg_model`)
+- default SVG model: `gpt-5.5` (override with `--svg_model`)
 
 ### Importing an Existing Stage-1 Figure
 

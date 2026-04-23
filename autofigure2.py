@@ -117,7 +117,7 @@ PROVIDER_CONFIGS = {
     "openai_response": {
         "base_url": "https://api.openai.com/v1",
         "default_image_model": "gpt-image-2",
-        "default_svg_model": "gpt-5.4",
+        "default_svg_model": "gpt-5.5",
     },
 }
 

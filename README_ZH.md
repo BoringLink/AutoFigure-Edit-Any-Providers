@@ -28,7 +28,7 @@
 ---
 ## 🔥 新闻
 
-- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** 现已发布。本次更新加入了 `custom` OpenAI 兼容 provider、OpenAI Responses + `gpt-image-2` 路由改进、第一阶段图片导入模式、双语配置界面，以及产品内配置指南。
+- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** 现已发布。本次 release 重点支持“用户自带第一阶段图片继续编辑”和 `gpt-image-2`、`gpt-5.5` 等 OpenAI 模型，同时补齐 `custom` OpenAI 兼容路由与双语配置工作流。详见 [完整 release notes](releases/v1.1.zh-CN.md)。
 - **[2026.03.24]** 🧠 我们的姊妹项目 **DeepScientist v1.5** 已正式发布。这是一个面向端到端科学发现的本地优先开源自主科研系统。欢迎访问 [GitHub](https://github.com/ResearAI/DeepScientist) 或阅读 [ICLR 2026 论文](https://openreview.net/forum?id=cZFgsLq8Gs)。
 - **[2026.02.17]** **AutoFigure-Edit 在线平台** 正式上线！供所有学者免费使用。欢迎前往 [deepscientist.cc](https://deepscientist.cc) 体验。
 - **[2026.01.26]** AutoFigure 被 **ICLR 2026** 接收！您可以在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
@@ -36,13 +36,14 @@
 
 ## 🆕 V1.1（2026.04.23）
 
-AutoFigure-Edit v1.1 主要聚焦于让真实用户在真实 OpenAI 兼容网关上的使用体验更稳定、更清晰。
+AutoFigure-Edit v1.1 对应 Git tag `v1.1`。这次 release 主要解决两类最实际的使用场景：一类是用户已经有第一阶段学术位图，希望直接上传继续做 SAM + SVG 重建；另一类是希望直接使用 OpenAI 官方模型，或使用兼容 OpenAI 协议的自定义网关完成整条链路。
 
-- **修复 OpenAI Responses 主链路：** 当你使用 `--provider openai_response` 并填写自定义 OpenAI 兼容 `base_url` 时，步骤 1 现在会默认继承同一条图片 API 路由和同一套 key，而不再错误回退到官方 OpenAI。
-- **支持 `custom` provider：** CLI 和网页端现在把 `custom` 作为主要的 OpenAI 兼容 provider 名称，同时继续保留 `bianxie` 作为向后兼容别名。
-- **新增第一阶段图片导入模式：** 你现在可以直接导入已有的学术位图，跳过生图步骤，直接从 SAM + SVG 重建继续。
-- **网页端双语配置：** 主页面、导入页面、画布页面和配置指南页都支持中英文即时切换。
-- **内置配置指南：** 新增专门的指南页面，解释工作流、字段含义、SAM 后端和推荐填写方案。
+- **支持用户自带第一阶段图片：** 你现在可以上传已有的学术位图，跳过步骤 1 生图，在网页端和 CLI 中都直接继续执行 SAM + SVG 重建。
+- **支持 OpenAI 官方模型：** 步骤 1 可以通过 OpenAI Images API 使用 `gpt-image-2`，而 `openai_response` 路线则作为文本 + 多模态 SVG 重建的正式工作流开放，默认 SVG 模型为 `gpt-5.5`。
+- **支持 `custom` OpenAI 兼容路由：** CLI 和网页端现在把 `custom` 作为主要兼容 provider 名称，继续保留 `bianxie` 作为向后兼容别名，并修复 `openai_response` 路由，让步骤 1 能默认继承同一套兼容 `base_url` 和 `api_key`。
+- **双语配置与上手引导：** 主页面、导入页面、画布页面和指南页面都支持中英文切换，产品内指南也会解释工作流选择、字段含义、SAM 后端和推荐配置。
+
+完整 release notes： [releases/v1.1.zh-CN.md](releases/v1.1.zh-CN.md)
 
 ---
 
@@ -213,7 +214,7 @@ docker compose down
   - `openrouter`：image `google/gemini-3.1-flash-image-preview`，svg `google/gemini-3.1-pro-preview`
   - `custom` / `bianxie`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
   - `gemini`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
-  - `openai_response`：image `gpt-image-2`（步骤一默认回落），svg `gpt-5.4`（Responses API）
+  - `openai_response`：image `gpt-image-2`（步骤一默认回落），svg `gpt-5.5`（Responses API）
 - 可选的步骤一 override：
   - `--image_provider openai`：通过 OpenAI 官方 Images API 使用 `gpt-image-2`
 
@@ -278,7 +279,7 @@ python autofigure2.py \
   --output_dir outputs/import_demo \
   --provider openai_response \
   --api_key OPENAI_KEY \
-  --svg_model gpt-5.4
+  --svg_model gpt-5.5
 ```
 
 ### 选项 2: Web 界面
@@ -426,7 +427,7 @@ python autofigure2.py \
 - 文本调用走 `client.responses.create(...)`
 - 多模态 SVG 重建也走 `client.responses.create(...)`
 - 步骤 1 生图默认回落到 OpenAI 官方 Images API，除非你显式指定 `--image_provider`
-- 默认 SVG 模型：`gpt-5.4`（可用 `--svg_model` 覆盖）
+- 默认 SVG 模型：`gpt-5.5`（可用 `--svg_model` 覆盖）
 
 ### 导入已有的第一阶段图片
 
