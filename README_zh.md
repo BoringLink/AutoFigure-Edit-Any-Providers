@@ -28,9 +28,23 @@
 ---
 ## 🔥 新闻
 
+- **[2026.04.23]** 🚀 **AutoFigure-Edit v1.1** 现已发布。本次 release 重点支持“用户自带第一阶段图片继续编辑”和 `gpt-image-2`、`gpt-5.5` 等 OpenAI 模型，同时补齐 `custom` OpenAI 兼容路由与双语配置工作流。详见 [完整 release notes](releases/v1.1.zh-CN.md)。
 - **[2026.03.24]** 🧠 我们的姊妹项目 **DeepScientist v1.5** 已正式发布。这是一个面向端到端科学发现的本地优先开源自主科研系统。欢迎访问 [GitHub](https://github.com/ResearAI/DeepScientist) 或阅读 [ICLR 2026 论文](https://openreview.net/forum?id=cZFgsLq8Gs)。
 - **[2026.02.17]** **AutoFigure-Edit 在线平台** 正式上线！供所有学者免费使用。欢迎前往 [deepscientist.cc](https://deepscientist.cc) 体验。
 - **[2026.01.26]** AutoFigure 被 **ICLR 2026** 接收！您可以在 [arXiv](https://arxiv.org/abs/2602.03828) 上阅读论文。
+---
+
+## 🆕 V1.1（2026.04.23）
+
+AutoFigure-Edit v1.1 对应 Git tag `v1.1`。这次 release 主要解决两类最实际的使用场景：一类是用户已经有第一阶段学术位图，希望直接上传继续做 SAM + SVG 重建；另一类是希望直接使用 OpenAI 官方模型，或使用兼容 OpenAI 协议的自定义网关完成整条链路。
+
+- **支持用户自带第一阶段图片：** 你现在可以上传已有的学术位图，跳过步骤 1 生图，在网页端和 CLI 中都直接继续执行 SAM + SVG 重建。
+- **支持 OpenAI 官方模型：** 步骤 1 可以通过 OpenAI Images API 使用 `gpt-image-2`，而 `openai_response` 路线则作为文本 + 多模态 SVG 重建的正式工作流开放，默认 SVG 模型为 `gpt-5.5`。
+- **支持 `custom` OpenAI 兼容路由：** CLI 和网页端现在把 `custom` 作为主要兼容 provider 名称，继续保留 `bianxie` 作为向后兼容别名，并修复 `openai_response` 路由，让步骤 1 能默认继承同一套兼容 `base_url` 和 `api_key`。
+- **双语配置与上手引导：** 主页面、导入页面、画布页面和指南页面都支持中英文切换，产品内指南也会解释工作流选择、字段含义、SAM 后端和推荐配置。
+
+完整 release notes： [releases/v1.1.zh-CN.md](releases/v1.1.zh-CN.md)
+
 ---
 
 ## ✨ 特性
@@ -198,8 +212,11 @@ docker compose down
 - 默认 SAM Prompt：`icon,person,robot,animal`
 - 当前默认模型：
   - `openrouter`：image `google/gemini-3.1-flash-image-preview`，svg `google/gemini-3.1-pro-preview`
-  - `bianxie`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
+  - `custom` / `bianxie`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
   - `gemini`：image `gemini-3.1-flash-image-preview`，svg `gemini-3.1-pro-preview`
+  - `openai_response`：image `gpt-image-2`（步骤一默认回落），svg `gpt-5.5`（Responses API）
+- 可选的步骤一 override：
+  - `--image_provider openai`：通过 OpenAI 官方 Images API 使用 `gpt-image-2`
 
 #### 6）常见 Docker 网络问题
 
@@ -227,8 +244,42 @@ pip install -e .
 python autofigure2.py \
   --method_file paper.txt \
   --output_dir outputs/demo \
-  --provider bianxie \
+  --provider custom \
   --api_key YOUR_KEY
+```
+
+仅把步骤 1 的生图切到 OpenAI GPT-Image，而 SVG 重建仍然走原 provider：
+
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider gemini \
+  --api_key GEMINI_KEY \
+  --image_provider openai \
+  --image_api_key OPENAI_KEY \
+  --image_model gpt-image-2
+```
+
+使用 OpenAI Responses API 处理文本和多模态 SVG 重建：
+
+```bash
+python autofigure2.py \
+  --method_file paper.txt \
+  --output_dir outputs/demo \
+  --provider openai_response \
+  --api_key OPENAI_KEY
+```
+
+从已有的第一阶段图片继续，直接跳过生图：
+
+```bash
+python autofigure2.py \
+  --input_figure_path ./my_stage1_figure.png \
+  --output_dir outputs/import_demo \
+  --provider openai_response \
+  --api_key OPENAI_KEY \
+  --svg_model gpt-5.5
 ```
 
 ### 选项 2: Web 界面
@@ -249,11 +300,17 @@ AutoFigure-edit 提供了一个可视化的 Web 界面，旨在实现无缝的�
 <img src="img/demo_start.png" width="100%" alt="配置页面" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
 
 在起始页面左侧粘贴论文的方法文本。在右侧配置生成选项：
-*   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter、Bianxie 或 Gemini）。
+*   **供应商 (Provider):** 选择 LLM 供应商（OpenRouter、Custom、Gemini 或 OpenAI Responses）。
+*   **图片供应商 (Image Provider):** 可单独覆盖 **步骤 1 生图**，例如切到 OpenAI GPT-Image。
 *   **优化 (Optimize):** 设置 SVG 模板的优化迭代次数（日常使用建议设为 `0`）。
-*   **图片分辨率 (Image Size):** 仅在 **Gemini** 模式下可选，可设置为 `1K`、`2K` 或 `4K`。
+*   **图片分辨率 (Image Size):** 当步骤 1 的实际图片 provider 为 **Gemini** 时可选，可设置为 `1K`、`2K` 或 `4K`。
+*   **自动放大 (Auto Upscale):** 默认开启。会把 `figure.png` 的长边等比例放大到 4K（`3840px`），保持原始长宽比不变。
 *   **参考图片 (Reference Image):** 上传目标图片以启用风格迁移功能。
 *   **SAM3 后端:** 选择本地 SAM3 或 fal.ai API（API Key 可选）。
+
+如果你已经有第一阶段的位图，也可以直接点击右上角黑色按钮：
+
+*   **我已经有第一阶段的图片了:** 打开单独的导入页面，上传现成的学术图片，然后直接进入 SAM + SVG 重建流程。
 
 ### 2. 画布与编辑器
 <img src="img/demo_canvas.png" width="100%" alt="画布页面" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"/>
@@ -312,14 +369,19 @@ python autofigure2.py \
 | 供应商 | Base URL | 备注 |
 |----------|----------|------|
 | **OpenRouter** | `openrouter.ai/api/v1` | 支持 Gemini/Claude/其他模型 |
-| **Bianxie** | `api.bianxie.ai/v1` | 兼容 OpenAI 接口 |
+| **Custom** | `api.bianxie.ai/v1`（默认） | 兼容 OpenAI 接口；`bianxie` 仍保留为向后兼容别名 |
 | **Gemini (Google)** | `generativelanguage.googleapis.com/v1beta` | Google 官方 Gemini API（`google-genai`） |
+| **OpenAI Responses** | `api.openai.com/v1` | 使用 OpenAI 官方 Responses API 处理文本和多模态 |
 
 常用 CLI 参数：
 
-- `--provider` (openrouter | bianxie | gemini)
+- `--method_text`、`--method_file` 或 `--input_figure_path`
+- `--provider` (openrouter | custom | bianxie | gemini | openai_response)
+- `--image_provider` (openrouter | custom | bianxie | gemini | openai，可选的步骤一 override)
+- `--image_api_key`, `--image_base_url`
 - `--image_model`, `--svg_model`
 - `--image_size` (1K | 2K | 4K，仅 Gemini)
+- `--disable_auto_upscale`（关闭步骤 1 后默认开启的 4K 等比例放大）
 - `--sam_prompt` (逗号分隔的提示词)
 - `--sam_backend` (local | fal | roboflow | api)
 - `--sam_api_key` (API Key，默认读取 `FAL_KEY` 或 `ROBOFLOW_API_KEY`)
@@ -332,12 +394,44 @@ python autofigure2.py \
 
 如果你希望接入自部署或第三方的 OpenAI 兼容接口，可以使用：
 
-- `--provider openrouter`
+- `--provider custom`
 - `--base_url <你的接口地址>`
 - `--image_model <生图模型 ID>`
 - `--svg_model <SVG 模型 ID>`
 
 这种方式本质上是把你的 `base_url` 当作一个兼容 OpenAI 协议的自定义提供商来调用。请确认该接口同时支持图片生成和多模态 SVG 重建，再用于完整任务。
+
+### 步骤一使用 OpenAI GPT-Image
+
+截至 2026 年 4 月 23 日，OpenAI 官方 Images API 支持通过 `images.generate` / `images.edit` 调用 GPT-Image 模型。本项目中的 `--image_provider openai` 只会覆盖步骤 1：
+
+- 无参考图：调用 `images.generate`
+- 有参考图：调用 `images.edit`
+- 默认模型：`gpt-image-2`（可用 `--image_model` 覆盖）
+- API Key 优先级：`--image_api_key` -> `OPENAI_API_KEY` -> `--api_key`
+
+### 默认 4K 等比例放大
+
+步骤 1 结束后，生成的 `figure.png` 默认会被等比例放大，使长边达到 `3840px`，同时保持原始长宽比不变。如果原图长边已经达到或超过 4K，则会自动跳过该步骤。
+
+如需关闭，可使用：
+
+```bash
+--disable_auto_upscale
+```
+
+### OpenAI Responses Provider
+
+截至 2026 年 4 月 23 日，OpenAI 官方 Responses API 支持使用 `input_text` 和 `input_image` 进行文本输出。本项目中的 `--provider openai_response` 表示：
+
+- 文本调用走 `client.responses.create(...)`
+- 多模态 SVG 重建也走 `client.responses.create(...)`
+- 步骤 1 生图默认回落到 OpenAI 官方 Images API，除非你显式指定 `--image_provider`
+- 默认 SVG 模型：`gpt-5.5`（可用 `--svg_model` 覆盖）
+
+### 导入已有的第一阶段图片
+
+如果你已经有步骤 1 产出的学术位图，可以使用 `--input_figure_path` 直接跳过生图。流程会先把导入的图片标准化为 `figure.png`，默认继续执行 4K 等比例放大，然后从 SAM 分割和 SVG 重建继续。
 
 ---
 
