@@ -1,0 +1,19 @@
+Oracle Feedback Capture Template
+- Session: [Date] | Session ID: [ID]
+- Attendees: [Names]
+- Rationale: Summary of what was reviewed and why
+- Architecture decisions
+  - [ ] Backend adapters (LLMClient) mapping details
+  - [ ] Canonical payload schema confirmation
+  - [ ] Per-session isolation approach
+- Security & governance
+  - [ ] Secrets handling and rotation plan
+- End-to-end testing
+  - [ ] CI/mock harness coverage for six shapes
+- Risks & mitigations
+  - [ ] List top risks and mitigations
+- Action items
+  - [ ] Updated artifacts to publish
+  - [ ] Governance plan adjustments
+- Sign-off
+  - [ ] Oracle sign-off confirmed

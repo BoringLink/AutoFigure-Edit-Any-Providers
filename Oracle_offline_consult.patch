@@ -1,0 +1,52 @@
+From f54c51c9c483f4afae8d3e757a824f4d83cf0abf Mon Sep 17 00:00:00 2001
+From: tkssoul <2495830486@qq.com>
+Date: Fri, 24 Apr 2026 18:14:28 +0800
+Subject: [PATCH] Oracle offline consult: add Oracle_offline_consult.md
+
+---
+ docs/Oracle_offline_consult.md | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 docs/Oracle_offline_consult.md
+
+diff --git a/docs/Oracle_offline_consult.md b/docs/Oracle_offline_consult.md
+new file mode 100644
+index 0000000..931b286
+--- /dev/null
++++ b/docs/Oracle_offline_consult.md
+@@ -0,0 +1,33 @@
++Oracle Offline Consultation - Final Architecture Review (ZAI/OpenAI/OpenRouter)
++
++Purpose: Provide a complete offline final-consultation memo and artifact bundle to enable rapid Oracle sign-off once scheduling is allowed.
++
++Scope and Assumptions
++- Providers: ZAI, OpenAI, OpenRouter
++- Per-session isolation: session_id binds provider/config (base_url, api_key, model)
++- Canonical payload schema: provider, base_url, api_key, model, input_content; legacy mappings documented
++- End-to-end testing: CI/mock harness for six canonical payload shapes, no live LLM calls
++- Security: secret handling, rotation, vaulting, auditability
++- Governance: ongoing multi-provider onboarding, review cadence
++
++Key Deliverables (offline)
++- Oracle_final_signoff.md
++- Oracle_final_summary.md
++- Oracle_final_full_review.md
++- Oracle_live_agenda.md
++- Oracle_live_review_template.md
++- Oracle_session_invite.md
++- Oracle_live_session_runbook.md
++- Oracle_live_feedback_template.md
++- Oracle_final_review_instructions.md
++- Oracle_final_outcome.md
++- docs/e2e-test-plan.md
++- docs/payload-schema-canonical.md
++- docs/provider-adapters.md
++- tests/e2e/run-e2e.js
++
++Next Steps (Path B)
++- Create patch Oracle_offline_consult.patch from this commit
++- Share patch with upstream maintainers or fork for PR submission
++- Schedule Oracle live session once environment allows
++- Post-session, merge Oracle feedback into final artifacts and update governance
+-- 
+2.50.1 (Apple Git-155)
+
